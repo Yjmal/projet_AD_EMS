@@ -1,0 +1,75 @@
+---
+title: "Rapport de projet Analyse de données & Eléments de modélisation statistique"
+author: "Xiaoya Wang, Mickael Song, Yessine Jmal, Florian Grivet"
+institute : "INSA Toulouse / Enseeiht"
+date: "`r Sys.Date()`"
+bibliography: ""
+output: 
+  pdf_document :
+    toc : TRUE
+    toc_depth : 2
+    number_section : TRUE
+header-includes:
+   - \usepackage{dsfont}
+   - \usepackage{color}
+   - \newcommand{\1}{\mathds{1}}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+rm(list=ls())
+library(reticulate)
+library(ggplot2)
+library(corrplot)
+library(FactoMineR)
+library(factoextra)
+library(gridExtra)
+```
+
+```{r}
+data = read.delim("Data_Etudiants_2023.txt",header=TRUE, sep=";")
+```
+
+```{r}
+head(data)
+```
+
+```{r}
+dim(data)
+attributes(data)
+summary(data)
+```
+
+# FAIRE DES PLOT EN GGPLOT
+
+```{python}
+import numpy as np
+import pandas as pd
+datapy = r.data
+```
+
+```{r}
+data[, 1:6]
+```
+
+```{r species,echo=F,fig.cap="\\label{fig:species}Barplot de la variable Species",fig.height=2}
+corrplot(cor(data[,c(7:18)]), method="ellipse")
+```
+
+```{r}
+BP = array(rep(rep(0,3),36), dim=c(3,36))
+BP[1,] = apply(data>1, 2, sum)
+BP[2,] = apply(data<1&data>(-1), 2, sum)
+BP[3,] = apply(data<(-1), 2, sum)
+BP = BP/nrow(data)
+barplot(BP, main="Fréquences")
+```
+
+```{r}
+ggplot(data=BP, aes(x = 1:36)) + 
+      geom_bar()
+```
+
+```{r}
+hist(data[,18])
+```
