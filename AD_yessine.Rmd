@@ -1,0 +1,58 @@
+---
+title: "analyse_de_données_yessine"
+output: pdf_document
+date: "2022-09-19"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+donnee = read.delim("Data_Etudiants_2023.txt",header=TRUE,sep = ";")
+donnee
+head(donnee)
+attributes(donnee)
+summary(donnee)
+
+
+```
+```{r cars}
+T1_6h_R2 = donnee[grep("T1_6h_R2",names(donnee),value=TRUE)]
+T1_6h_R2
+H <- hist(T1_6h_R2, plot = FALSE)
+```
+
+```{r cars} 
+R1 = donnee[grep("R1",names(donnee),value=TRUE)]
+corrplot(cor(R1), method = "ellipse")
+T1R1 = R1[grep("T1",names(R1),value=TRUE)]
+T2R2 = R1[grep("T2",names(R1),value=TRUE)]
+
+```
+```{r cars} 
+T1 = donnee[grep("T1",names(donnee),value=TRUE)]
+corrplot(cor(T1), method = "ellipse")
+```
+```{r cars} 
+R2 = donnee[grep("R2",names(donnee),value=TRUE)]
+corrplot(cor(R2), method = "ellipse")
+```
+```{r cars} 
+T2 = donnee[grep("T2",names(donnee),value=TRUE)]
+corrplot(cor(T2), method = "ellipse")
+```
+
+
+```{r cars} 
+T3 = donnee[grep("T3",names(donnee),value=TRUE)]
+corrplot(cor(T3), method = "ellipse")
+```
+
+
