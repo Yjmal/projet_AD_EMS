@@ -1,3 +1,5 @@
+# FAIRE DES PLOT EN GGPLOT
+
 ---
 title: "Rapport de projet Analyse de données & Eléments de modélisation statistique"
 author: "Xiaoya Wang, Mickael Song, Yessine Jmal, Florian Grivet"
@@ -14,6 +16,31 @@ header-includes:
    - \usepackage{color}
    - \newcommand{\1}{\mathds{1}}
 ---
+
+```{css,echo=F}
+.badCode {
+background-color: #C9DDE4;
+}
+```
+
+```{r setup, echo=FALSE, cache=FALSE}
+library(knitr)
+## Global options
+options(max.print="75")
+opts_chunk$set(echo=TRUE,
+	             cache=FALSE,
+               prompt=FALSE,
+               tidy=TRUE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE,
+               class.source="badCode")
+opts_knit$set(width=75)
+```
+
+# Analyse du jeu de données
+
+## Statistiques descriptives et préparation du jeu de données en R
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -35,12 +62,32 @@ head(data)
 ```
 
 ```{r}
-dim(data)
-attributes(data)
-summary(data)
+sprintf("Le jeu de données contient %s individus et %s variables, toutes quantitatives", dim(data)[1], dim(data)[2])
 ```
 
-# FAIRE DES PLOT EN GGPLOT
+```{r}
+print("Les attributs du jeu de données sont : ")
+print(attributes(data))
+```
+
+```{r}
+print("Summary : ")
+print(summary(data))
+```
+
+```{r}
+boxplot(data)
+```
+
+```{r}
+pairs(data[1:])
+```
+
+```{r}
+corrplot(cor(data), method="ellipse")
+```
+
+## Statistiques descriptives et préparation du jeu de données en Python
 
 ```{python}
 import numpy as np
