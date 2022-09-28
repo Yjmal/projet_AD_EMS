@@ -26,7 +26,6 @@ background-color: #C9DDE4;
 ```{r setup, echo=FALSE, cache=FALSE}
 library(knitr)
 ## Global options
-options(max.print="75")
 opts_chunk$set(echo=TRUE,
 	             cache=FALSE,
                prompt=FALSE,
@@ -80,27 +79,7 @@ boxplot(data)
 ```
 
 ```{r}
-pairs(data[1:])
-```
-
-```{r}
 corrplot(cor(data), method="ellipse")
-```
-
-## Statistiques descriptives et préparation du jeu de données en Python
-
-```{python}
-import numpy as np
-import pandas as pd
-datapy = r.data
-```
-
-```{r}
-data[, 1:6]
-```
-
-```{r species,echo=F,fig.cap="\\label{fig:species}Barplot de la variable Species",fig.height=2}
-corrplot(cor(data[,c(7:18)]), method="ellipse")
 ```
 
 ```{r}
@@ -109,14 +88,71 @@ BP[1,] = apply(data>1, 2, sum)
 BP[2,] = apply(data<1&data>(-1), 2, sum)
 BP[3,] = apply(data<(-1), 2, sum)
 BP = BP/nrow(data)
-barplot(BP, main="Fréquences")
+barplot(BP, main="Fréquences", col=c("blue", "grey", "red"), names.arg=c(attributes(data)$names))
+legend(0,0.6, legend=c("sur-exprimé", "normal", "sous-exprimé"), title="Type de gène", box.col="grey", fill=c("blue", "grey", "red"), cex=0.65)
 ```
 
 ```{r}
-ggplot(data=BP, aes(x = 1:36)) + 
-      geom_bar()
+hist(data[,18], main="Fréquence de la valeur des gènes du traintement 3 à l'heure 6")
+```
+
+On remarque qu'à l'heure 6 (la dernière) du traitement 3, tous les gènes sont soit très sur-exprimé (valeurs $\geq 2$ ), soit très sous-exprimé (valeurs $\leq 2$).
+
+```{r}
+res.pca = PCA(data, ncp=15, graph=F)
+summary(res.pca)
 ```
 
 ```{r}
-hist(data[,18])
+barplot(cumsum(res.pca$eig[, "percentage of variance"]), main="Percentage of variance")
+abline(h=95, col="blue")
+abline(h=99, col="red")
+```
+
+```{r}
+col_trait = rep(rep(c(1,2,3), each=6),2)
+fviz_pca_var(res.pca, col.var=col_trait) + scale_color_gradient2(low="blue", mid="black", high="red", midpoint=2)
+```
+
+```{r}
+plot(res.pca, axes=c(1, 2), choix = "ind", autoLab="yes")
+```
+
+```{r}
+print("Pourcentage des variables dans la construction des dimensions 1 et 2 :")
+res.pca$var$cor[,1]/sum(res.pca$var$cor[,1])*100
+res.pca$var$cor[,2]/sum(res.pca$var$cor[,2])*100
+```
+
+L'axe 1 nous dit si un gène réagit au traitement 2 ou 3. Si le gène réagit fortement à l'un de ces traitements, il se retrouve sur un côté du graphique (si le gène devient très sous-exprimé ou sur-exprimé) et s'il ne réagit pas beaucoup à l'un de ces traitement il se trouve au milieu.
+
+L'axe 2 nous dit si un gène réagit au traitement 1. Si le gène réagit fortement à ce traitement, il se retrouve en haut s'il devient sur-exprimé, en bas s'il devient sous-exprimé et s'il ne réagit pas beaucoup, il se trouve au milieu.
+
+```{r}
+data_transpose = t(data)
+res.pca.transpose = PCA(data_transpose, ncp=15, graph=F)
+res.pca.transpose$eig
+summary(res.pca.transpose)
+```
+
+```{r}
+barplot(cumsum(res.pca.transpose$eig[, "percentage of variance"]), main="Percentage of variance")
+abline(h=95, col="blue")
+abline(h=99, col="red")
+```
+
+```{r}
+fviz_pca_var(res.pca.transpose, col.var=data$T3_6h_R2) + scale_color_gradient2(low="blue", mid="black", high="red", midpoint=0)
+```
+
+```{r}
+fviz_pca_ind(res.pca.transpose, axes=c(1, 2), autoLab="yes", col.ind=col_trait) + scale_color_gradient2(low="blue", mid="black", high="red", midpoint=2)
+```
+
+## Statistiques descriptives et préparation du jeu de données en Python
+
+```{python}
+import numpy as np
+import pandas as pd
+datapy = r.data
 ```
