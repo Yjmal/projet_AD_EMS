@@ -52,11 +52,15 @@ library(factoextra)
 library(gridExtra)
 ```
 
+### Statistiques descriptives
+
 ```{r}
+# Chargement des données
 data = read.delim("Data_Etudiants_2023.txt",header=TRUE, sep=";")
 ```
 
 ```{r}
+# Affichage des premières lignes des données
 head(data)
 ```
 
@@ -66,7 +70,7 @@ sprintf("Le jeu de données contient %s individus et %s variables, toutes quanti
 
 ```{r}
 print("Les attributs du jeu de données sont : ")
-print(attributes(data))
+print(attributes(data)$names)
 ```
 
 ```{r}
@@ -75,8 +79,14 @@ print(summary(data))
 ```
 
 ```{r}
+ggplot(stack(data), aes(x = ind, y = values))+ 
+  geom_boxplot()
 boxplot(data)
 ```
+
+On remarque que les traitements 2 et 3 ont des boxplots similaires que ça soit pour le réplicat 1 ou pour le réplicat 2. Cela signifie que ces deux traitements ont des résultats similaires.\
+On note également une forte variabilité entre les individus.\
+Le traitement 1 est quant à lui beaucoup plus concentré et centré en 0. Le traitement semble donc ne pas avoir d'effet sur les gènes.
 
 ```{r}
 corrplot(cor(data), method="ellipse")
@@ -93,10 +103,12 @@ legend(0,0.6, legend=c("sur-exprimé", "normal", "sous-exprimé"), title="Type d
 ```
 
 ```{r}
-hist(data[,18], main="Fréquence de la valeur des gènes du traintement 3 à l'heure 6")
+hist(data[,18], main="Fréquence de la valeur des gènes du traitement 3 à l'heure 6")
 ```
 
-On remarque qu'à l'heure 6 (la dernière) du traitement 3, tous les gènes sont soit très sur-exprimé (valeurs $\geq 2$ ), soit très sous-exprimé (valeurs $\leq 2$).
+On remarque qu'à l'heure 6 (la dernière) du traitement 3, tous les gènes sont soit très sur-exprimé (valeurs $\geq 2$ ), soit très sous-exprimé (valeurs $\leq 2$). C'est comme ça que les gènes du jeu de données ont été choisi.
+
+### Analyse en composante principale
 
 ```{r}
 res.pca = PCA(data, ncp=15, graph=F)
@@ -124,7 +136,7 @@ res.pca$var$cor[,1]/sum(res.pca$var$cor[,1])*100
 res.pca$var$cor[,2]/sum(res.pca$var$cor[,2])*100
 ```
 
-L'axe 1 nous dit si un gène réagit au traitement 2 ou 3. Si le gène réagit fortement à l'un de ces traitements, il se retrouve sur un côté du graphique (si le gène devient très sous-exprimé ou sur-exprimé) et s'il ne réagit pas beaucoup à l'un de ces traitement il se trouve au milieu.
+L'axe 1 nous dit si un gène réagit au traitement 2 ou 3. Si le gène réagit fortement à l'un de ces traitements, il se retrouve sur un côté du graphique (si le gène devient très sous-exprimé ou très sur-exprimé) et s'il ne réagit pas beaucoup à l'un de ces traitement il se trouve au milieu.
 
 L'axe 2 nous dit si un gène réagit au traitement 1. Si le gène réagit fortement à ce traitement, il se retrouve en haut s'il devient sur-exprimé, en bas s'il devient sous-exprimé et s'il ne réagit pas beaucoup, il se trouve au milieu.
 
