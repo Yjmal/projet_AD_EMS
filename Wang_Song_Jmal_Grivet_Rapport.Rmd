@@ -1,7 +1,9 @@
 ---
-output:
-  pdf_document: default
-  html_document: default
+output: 
+  pdf_document :
+    toc : TRUE
+    toc_depth : 3
+    number_section : TRUE
 ---
 
 ---
@@ -10,11 +12,6 @@ author: "Xiaoya Wang, Mickael Song, Yessine Jmal, Florian Grivet"
 institute : "INSA Toulouse / Enseeiht"
 date: "`r Sys.Date()`"
 bibliography: ""
-output: 
-  pdf_document :
-    toc : TRUE
-    toc_depth : 2
-    number_section : TRUE
 header-includes:
    - \usepackage{dsfont}
    - \usepackage{color}
@@ -26,6 +23,8 @@ library(knitr)
 opts_chunk$set(echo = TRUE)
 opts_knit$set(width=75)
 ```
+
+\newpage
 
 # Analyse du jeu de données
 
@@ -39,6 +38,8 @@ library(corrplot)
 library(FactoMineR)
 library(factoextra)
 library(gridExtra)
+library(leaps)
+library(MASS)
 ```
 
 ```{python include=FALSE}
@@ -47,6 +48,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import plotly.express as px
 import sklearn as sk
+import seaborn as sns
 ```
 
 ```{r}
@@ -58,13 +60,13 @@ data = read.delim("Data_Etudiants_2023.txt",header=TRUE, sep=";")
 datapy = pd.read_csv("Data_Etudiants_2023.txt", sep=";")
 ```
 
-```{python}
-# Affichage des premières lignes des données
+```{python include=FALSE}
+# Affichage des 6 premières lignes des données
 datapy.head(n=6)
 ```
 
-```{r include=FALSE}
-head(data[1:18])
+```{r tabdata, echo=F}
+kable(head(round(data[1:8],2)),caption="\\label{tab:tabdata}Les premières lignes du jeu de données.")
 ```
 
 \vspace{1em}
@@ -74,7 +76,7 @@ Les attributs du jeu de données sont : `r attributes(data)$names`
 
 \vspace{1em}
 
-```{r echo=FALSE}
+```{r include=FALSE}
 print("Quelques statistiques sur les variables : ")
 print(summary(data))
 ```
@@ -83,11 +85,13 @@ print(summary(data))
 datapy.describe()
 ```
 
-Avec la commande ci-dessous, on voit bien que notre jeu de données est complet.
+Avec le résultat de la commande `datapy.isnull().sum()`, on voit bien que notre jeu de données est complet.
 
-```{python eval=FALSE}
+```{python include=FALSE}
 datapy.isnull().sum()
 ```
+
+\newpage
 
 ```{r}
 ggplot(stack(data), aes(x = ind, y = values))+ 
@@ -95,17 +99,26 @@ ggplot(stack(data), aes(x = ind, y = values))+
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 ```
 
-On remarque que les traitements 2 et 3 ont des boxplots similaires que ça soit pour le réplicat 1 ou pour le réplicat 2. On peut faire l'hypothèse que ces deux traitements ont des résultats similaires.\
-On note également une forte variabilité entre les individus.\
-Le traitement 1 est quant à lui beaucoup plus concentré et centré en 0. Le traitement semble donc ne pas avoir d'effet sur les gènes.
+On remarque que les traitements 2 et 3 ont des boxplots similaires que ça soit pour le réplicat 1 ou pour le réplicat 2. On peut faire l'hypothèse que ces deux traitements ont des résultats similaires. On remarque que ces deux traitements ne sont pas centrés donc qu'ils ont un effet non nul sur les gènes. On note également une dissymétrie pour ces traitements ainsi que de nombreux outliers et une forte variabilité entre les individus.\
+Le traitement 1 est quant à lui beaucoup plus réduit et centré en 0. Le traitement semble donc ne pas avoir d'effet sur les gènes. On remarque que le traitement 1 est symétrique mais possède également beaucoup d'outliers.
 
 ```{python include=FALSE}
 fig=px.box(datapy)
 fig.show()
 ```
 
+\newpage
+
 ```{r}
 corrplot(cor(data), method="ellipse")
+```
+
+### ANALYSE CORRPLOT A FAIRE
+
+```{python include=FALSE}
+plt.figure(figsize = (40,40))
+sns.heatmap(datapy.corr(),cmap = sns.color_palette('coolwarm',as_cmap = True))
+plt.show()
 ```
 
 ```{r}
@@ -120,38 +133,65 @@ legend(0,0.6, legend=c("sur-exprimé", "normal", "sous-exprimé"), title="Type d
 
 Ce graphique représente la fréquence des gènes "sous-exprimés", "normaux" et "sur-exprimés" pour chaque traitement à toute heure sur les deux réplicats. Ce graphique appuie notre hypothèse que les traitements 2 et 3 sont similaires et que le traitement 1 n'a pas beaucoup d'effet.
 
+```{python include=FALSE}
+d1 = datapy[datapy > 1].count()
+d1 = d1/len(datapy)
+d2 = datapy[(datapy<=1) & (datapy >-1)].count()
+d2 = d2/len(datapy)
+d3 = datapy[ (datapy <=-1)].count()
+d3 = d3/len(datapy)
+somme = pd.DataFrame({'d1':d1,'d2':d2,'d3':d3})
+
+fig = px.bar(somme)
+fig.show()
+```
+
 ```{r}
 hist(data[,18], main="Fréquence de la valeur des gènes du traitement 3 à l'heure 6")
 ```
 
 On remarque qu'à l'heure 6 (la dernière) du traitement 3, tous les gènes sont soit très sur-exprimé (valeurs $\geq 2$ ), soit très sous-exprimé (valeurs $\leq 2$). C'est comme ça que les gènes du jeu de données ont été choisi.
 
-### Analyse en composante principale
+```{python include=FALSE}
+fig = px.histogram(datapy["T3_6h_R1"])
+fig.show()
+```
 
-```{r}
+## Analyse en composante principale
+
+```{r include=FALSE}
 data_centree_reduite = scale(data)
 data = as.data.frame(data_centree_reduite)
 res.pca = PCA(data, ncp=15, graph=F)
 summary(res.pca)
 ```
 
-```{r}
+```{r, fig.height=3}
 barplot(cumsum(res.pca$eig[, "percentage of variance"]), main="Percentage of variance")
 abline(h=95, col="blue")
 abline(h=99, col="red")
 ```
 
-```{r}
+```{r include=FALSE}
+cumsum(res.pca$eig[, "percentage of variance"])
+```
+
+Pour avoir 95% de l'information, on peut réduire nos données à 10 dimensions.\
+Pour avoir 99% de l'information il suffit de se placer en dimension 28.
+
+```{r, fig.height=3}
 col_trait = rep(rep(c(1,2,3), each=6),2)
-fviz_pca_var(res.pca, col.var=col_trait) + scale_color_gradient2(low="blue", mid="black", high="red", midpoint=2)
+g1 = fviz_pca_ind(res.pca, label="none")
+g2 = fviz_pca_var(res.pca, col.var=col_trait) + scale_color_gradient2(low="blue", mid="black", high="red", midpoint=2)
+grid.arrange(g1,g2,ncol=2)
 ```
 
-```{r}
-plot(res.pca, axes=c(1, 2), choix = "ind", autoLab="yes")
-```
+Les traitements 2 et 3 semblent avoir le même comportement et son selon l'axe 1.\
+Le traitement 1 suit l'axe 2.
 
-```{r}
-print("Pourcentage des variables dans la construction des dimensions 1 et 2 :")
+Pourcentage des variables dans la construction des dimensions 1 et 2 :
+
+```{r include=FALSE}
 res.pca$var$cor[,1]/sum(res.pca$var$cor[,1])*100
 res.pca$var$cor[,2]/sum(res.pca$var$cor[,2])*100
 ```
@@ -160,23 +200,141 @@ L'axe 1 nous dit si un gène réagit au traitement 2 ou 3. Si le gène réagit f
 
 L'axe 2 nous dit si un gène réagit au traitement 1. Si le gène réagit fortement à ce traitement, il se retrouve en haut s'il devient sur-exprimé, en bas s'il devient sous-exprimé et s'il ne réagit pas beaucoup, il se trouve au milieu.
 
-```{r}
+```{r include=FALSE}
 data_transpose = t(data)
 res.pca.transpose = PCA(data_transpose, ncp=15, graph=F)
 res.pca.transpose$eig
 summary(res.pca.transpose)
 ```
 
-```{r}
+```{r include=FALSE}
 barplot(cumsum(res.pca.transpose$eig[, "percentage of variance"]), main="Percentage of variance")
 abline(h=95, col="blue")
 abline(h=99, col="red")
 ```
 
+```{r include=FALSE}
+cumsum(res.pca.transpose$eig[, "percentage of variance"])
+```
+
 ```{r}
-fviz_pca_var(res.pca.transpose, col.var=data$T3_6h_R2) + scale_color_gradient2(low="blue", mid="black", high="red", midpoint=0)
+fviz_pca_var(res.pca.transpose, col.var=data$T3_6h_R2, label="none") + scale_color_gradient2(low="blue", mid="black", high="red", midpoint=0)
 ```
 
 ```{r}
 fviz_pca_ind(res.pca.transpose, axes=c(1, 2), autoLab="yes", col.ind=col_trait) + scale_color_gradient2(low="blue", mid="black", high="red", midpoint=2)
+```
+
+### Commentaires à faire
+
+\vspace{2em}
+
+# Modèle linéaire
+
+Pour cela on a besoin des données centrées réduites qu'on obtient avec la commande suivante :
+
+```{r}
+data_new = as.data.frame(scale(data))
+```
+
+```{r include=FALSE}
+boxplot(data_new)
+```
+
+## Etude de l'expression des gènes pour le traitement T3 à 6h
+
+On récupère les valeurs du traitement T3 à 6h grâce aux commandes suivantes :
+
+```{r}
+T3 = data[grep("T3", names(data), value=TRUE)]
+T3R2 = T3[grep("R2", names(T3), value=TRUE)]
+```
+
+```{r inlcude=FALSE}
+reg.mul <- lm(T3_6h_R2 ~ ., data = T3R2)
+summary(reg.mul)
+```
+
+```{r}
+choix=regsubsets(T3_6h_R2~., data = T3R2, nbest = 1, nvmax = 5, method = "backward")
+plot(choix,scale = "bic")
+```
+
+On a réalisé notre sélection de variables avec tous les critères (BIC, adjr2, Cp) et avec les méthodes forward et backward. Nous avons eu les mêmes résultats :
+
+On garde toutes les variables mais on observe quand même une gradation. Le temps précédent (5h) est le plus influent suivi du temps de démarrage (1h, 2h). On peut faire l'hypothèse d'une périodicité de temps sur l'influence des traitements sur les gènes. Il faudrait avoir tester sur plus d'heures pour valider ou non cette hypothèse.
+
+On étudie sur tous les traitements et tous les temps :
+
+```{r}
+R2 = data_new[grep("R2", names(data_new), value = TRUE)]
+reg.mul_complet <- lm(T3_6h_R2 ~ ., data = R2)
+summary(reg.mul_complet)
+```
+
+```{r}
+choix=regsubsets(T3_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "backward")
+plot(choix,scale = "Cp")
+```
+
+Critère Cp, méthode backward: T1: 1h, 3h, 5h, 6h T2: 1h, 3h, 5h, 6h T3: 3h, 4h, 5h
+
+```{r}
+choix=regsubsets(T3_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "forward")
+plot(choix,scale = "Cp")
+```
+
+Critère Cp, méthode forward: T1: 1h, 3h, 5h, 6h T2: 1h, 2h, 3h, 5h, 6h T3: 5h
+
+```{r}
+choix=regsubsets(T3_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "backward")
+plot(choix,scale = "adjr2")
+```
+
+Critère bic, méthode backward: il enlève que T1 2h et T3 1h et 2h T1: 1h, 3h, 4h, 5h, 6h T2: 1h, 2h, 3h, 4h, 5h, 6h T3: 3h, 4h, 5h
+
+```{r}
+choix=regsubsets(T3_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "forward")
+plot(choix,scale = "adjr2")
+```
+
+Critère bic, méthode forward: (enlève que T1 et T3 à 2h) T1: 1h, 3h, 4h, 5h, 6h T2: 1h, 2h, 3h, 4h, 5h, 6h T3: 1h, 3h, 4h, 5h
+
+```{r}
+choix=regsubsets(T3_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "backward")
+plot(choix,scale = "bic")
+```
+
+Critère bic, méthode backward: T1: 1h, 3h, 5h, 6h T2: 1h, 3h, 5h, 6h T3: 5h
+
+```{r}
+choix=regsubsets(T3_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "forward")
+plot(choix,scale = "bic")
+```
+
+Critère bic, méthode forward: T1: 1h, 3h, 5h, 6h T2: 1h, 3h, 5h, 6h T3: 5h
+
+```{r}
+mod.debut = lm(T3_6h_R2 ~ ., data = R2)
+mod.fin = lm(T3_6h_R2 ~ T1_1h_R2+T1_3h_R2+T1_5h_R2+T1_6h_R2+T2_1h_R2+T2_3h_R2+T2_5h_R2+T2_6h_R2+T3_5h_R2, data = R2)
+```
+
+```{r}
+anova(mod.fin,mod.debut)
+```
+
+p-valeur = 0.2798
+
+ça correspond à l'analyse descriptive précedente, les gènes qui ont eu le traitement T2 ou le traitemet T3 ont des comportements similaires. Cela est cohérent avec le fait que T2 est plus influent sur T3 que T1 sur T3.
+
+On retrouve par ailleurs les résultats de l'analyse précédente puisque les heures les plus influentes sont les heures les plus proches.
+
+On veut chercher les variables prédictives qui permettent de discriminer les gènes sur-exprimés (Y\>1) des gènes sous-exprimés (Y\<-1) à 6h pour le traitement T3.
+
+```{r}
+sur_exp = T3R2[T3R2>1]
+```
+
+```{r}
+sum(T3R2["T3_1h_R2">1])
 ```
