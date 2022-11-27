@@ -2,7 +2,7 @@
 output: 
   pdf_document :
     toc : TRUE
-    toc_depth : 3
+    toc_depth : 2
     number_section : TRUE
 ---
 
@@ -40,6 +40,7 @@ library(factoextra)
 library(gridExtra)
 library(leaps)
 library(MASS)
+library(glmnet)
 ```
 
 ```{python include=FALSE}
@@ -94,6 +95,7 @@ datapy.isnull().sum()
 \newpage
 
 ```{r}
+# Boxplot
 ggplot(stack(data), aes(x = ind, y = values))+ 
   geom_boxplot()+ 
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
@@ -113,7 +115,9 @@ fig.show()
 corrplot(cor(data), method="ellipse")
 ```
 
-### ANALYSE CORRPLOT A FAIRE
+Sur ce graphique des corrélations on remarque que le traitement 1 réplicat 1 est fortement correlé au traitement 1 réplicat 2 mais ces derniers semblent totalement décorellés des traitements 2 et 3. On remarque également que les traitements 2 et 3 que ce soit le réplicat 1 ou 2 sont fortement corrélés.
+
+\vfill
 
 ```{python include=FALSE}
 plt.figure(figsize = (40,40))
@@ -122,6 +126,7 @@ plt.show()
 ```
 
 ```{r}
+# Fréquence de l'expression des gènes ("sous-exprimés", "normaux" et "sur-exprimés") en fonction des traitements
 BP = array(rep(rep(0,3),36), dim=c(3,36))
 BP[1,] = apply(data>1, 2, sum)
 BP[2,] = apply(data<=1&data>=(-1), 2, sum)
@@ -177,7 +182,7 @@ cumsum(res.pca$eig[, "percentage of variance"])
 ```
 
 Pour avoir 95% de l'information, on peut réduire nos données à 10 dimensions.\
-Pour avoir 99% de l'information il suffit de se placer en dimension 28.
+Pour avoir 99% de l'information il suffit de se placer en dimension 18.
 
 ```{r, fig.height=3}
 col_trait = rep(rep(c(1,2,3), each=6),2)
@@ -189,16 +194,20 @@ grid.arrange(g1,g2,ncol=2)
 Les traitements 2 et 3 semblent avoir le même comportement et son selon l'axe 1.\
 Le traitement 1 suit l'axe 2.
 
-Pourcentage des variables dans la construction des dimensions 1 et 2 :
-
 ```{r include=FALSE}
+# Pourcentage des variables dans la construction des dimensions 1 et 2 :
 res.pca$var$cor[,1]/sum(res.pca$var$cor[,1])*100
 res.pca$var$cor[,2]/sum(res.pca$var$cor[,2])*100
 ```
 
+La commande `res.pca$var$cor` nous donne la composition des axes.\
 L'axe 1 nous dit si un gène réagit au traitement 2 ou 3. Si le gène réagit fortement à l'un de ces traitements, il se retrouve sur un côté du graphique (si le gène devient très sous-exprimé ou très sur-exprimé) et s'il ne réagit pas beaucoup à l'un de ces traitement il se trouve au milieu.
 
 L'axe 2 nous dit si un gène réagit au traitement 1. Si le gène réagit fortement à ce traitement, il se retrouve en haut s'il devient sur-exprimé, en bas s'il devient sous-exprimé et s'il ne réagit pas beaucoup, il se trouve au milieu.
+
+\newpage
+
+### Analyse en composante principale sur les données transposées
 
 ```{r include=FALSE}
 data_transpose = t(data)
@@ -207,39 +216,32 @@ res.pca.transpose$eig
 summary(res.pca.transpose)
 ```
 
-```{r include=FALSE}
+```{r, fig.height=3}
 barplot(cumsum(res.pca.transpose$eig[, "percentage of variance"]), main="Percentage of variance")
 abline(h=95, col="blue")
 abline(h=99, col="red")
 ```
 
+Pour avoir 95% de l'information, on peut réduire nos données à 13 dimensions.\
+Pour avoir 99% de l'information il suffit de se placer en dimension 21.
+
+\vspace{2em}
+
 ```{r include=FALSE}
 cumsum(res.pca.transpose$eig[, "percentage of variance"])
 ```
 
-```{r}
-fviz_pca_var(res.pca.transpose, col.var=data$T3_6h_R2, label="none") + scale_color_gradient2(low="blue", mid="black", high="red", midpoint=0)
+```{r, fig.height=3}
+g1 = fviz_pca_var(res.pca.transpose, col.var=data$T3_6h_R2, label="none") + scale_color_gradient2(low="blue", mid="black", high="red", midpoint=0)
+g2 = fviz_pca_ind(res.pca.transpose, axes=c(1, 2), autoLab="yes", col.ind=col_trait) + scale_color_gradient2(low="blue", mid="black", high="red", midpoint=2)
+grid.arrange(g1,g2,ncol=2)
 ```
 
-```{r}
-fviz_pca_ind(res.pca.transpose, axes=c(1, 2), autoLab="yes", col.ind=col_trait) + scale_color_gradient2(low="blue", mid="black", high="red", midpoint=2)
-```
+Commentaires à faire
 
-### Commentaires à faire
-
-\vspace{2em}
+\newpage
 
 # Modèle linéaire
-
-Pour cela on a besoin des données centrées réduites qu'on obtient avec la commande suivante :
-
-```{r}
-data_new = as.data.frame(scale(data))
-```
-
-```{r include=FALSE}
-boxplot(data_new)
-```
 
 ## Etude de l'expression des gènes pour le traitement T3 à 6h
 
@@ -250,84 +252,92 @@ T3 = data[grep("T3", names(data), value=TRUE)]
 T3R2 = T3[grep("R2", names(T3), value=TRUE)]
 ```
 
-```{r inlcude=FALSE}
+```{r include=FALSE}
 reg.mul <- lm(T3_6h_R2 ~ ., data = T3R2)
 summary(reg.mul)
 ```
 
-```{r}
+```{r, fig.height=3.5}
 choix=regsubsets(T3_6h_R2~., data = T3R2, nbest = 1, nvmax = 5, method = "backward")
 plot(choix,scale = "bic")
+```
+
+```{r include=FALSE}
+choix=regsubsets(T3_6h_R2~., data = T3R2, nbest = 1, nvmax = 5, method = "forward")
+plot(choix,scale = "bic")
+choix=regsubsets(T3_6h_R2~., data = T3R2, nbest = 1, nvmax = 5, method = "backward")
+plot(choix,scale = "adjr2")
+choix=regsubsets(T3_6h_R2~., data = T3R2, nbest = 1, nvmax = 5, method = "forward")
+plot(choix,scale = "adjr2")
+choix=regsubsets(T3_6h_R2~., data = T3R2, nbest = 1, nvmax = 5, method = "backward")
+plot(choix,scale = "Cp")
+choix=regsubsets(T3_6h_R2~., data = T3R2, nbest = 1, nvmax = 5, method = "forward")
+plot(choix,scale = "Cp")
 ```
 
 On a réalisé notre sélection de variables avec tous les critères (BIC, adjr2, Cp) et avec les méthodes forward et backward. Nous avons eu les mêmes résultats :
 
 On garde toutes les variables mais on observe quand même une gradation. Le temps précédent (5h) est le plus influent suivi du temps de démarrage (1h, 2h). On peut faire l'hypothèse d'une périodicité de temps sur l'influence des traitements sur les gènes. Il faudrait avoir tester sur plus d'heures pour valider ou non cette hypothèse.
 
-On étudie sur tous les traitements et tous les temps :
-
+### Etude sur tous les traitements et tous les temps
 ```{r}
-R2 = data_new[grep("R2", names(data_new), value = TRUE)]
+R2 = data[grep("R2", names(data), value = TRUE)]
+```
+
+```{r include=FALSE}
 reg.mul_complet <- lm(T3_6h_R2 ~ ., data = R2)
 summary(reg.mul_complet)
 ```
-
-```{r}
-choix=regsubsets(T3_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "backward")
-plot(choix,scale = "Cp")
-```
-
-Critère Cp, méthode backward: T1: 1h, 3h, 5h, 6h T2: 1h, 3h, 5h, 6h T3: 3h, 4h, 5h
-
-```{r}
-choix=regsubsets(T3_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "forward")
-plot(choix,scale = "Cp")
-```
-
-Critère Cp, méthode forward: T1: 1h, 3h, 5h, 6h T2: 1h, 2h, 3h, 5h, 6h T3: 5h
-
-```{r}
-choix=regsubsets(T3_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "backward")
-plot(choix,scale = "adjr2")
-```
-
-Critère bic, méthode backward: il enlève que T1 2h et T3 1h et 2h T1: 1h, 3h, 4h, 5h, 6h T2: 1h, 2h, 3h, 4h, 5h, 6h T3: 3h, 4h, 5h
-
-```{r}
-choix=regsubsets(T3_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "forward")
-plot(choix,scale = "adjr2")
-```
-
-Critère bic, méthode forward: (enlève que T1 et T3 à 2h) T1: 1h, 3h, 4h, 5h, 6h T2: 1h, 2h, 3h, 4h, 5h, 6h T3: 1h, 3h, 4h, 5h
-
-```{r}
+```{r, fig.height=3.5}
 choix=regsubsets(T3_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "backward")
 plot(choix,scale = "bic")
 ```
 
-Critère bic, méthode backward: T1: 1h, 3h, 5h, 6h T2: 1h, 3h, 5h, 6h T3: 5h
-
-```{r}
+```{r include=FALSE}
 choix=regsubsets(T3_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "forward")
 plot(choix,scale = "bic")
+choix=regsubsets(T3_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "backward")
+plot(choix,scale = "Cp")
+choix=regsubsets(T3_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "forward")
+plot(choix,scale = "Cp")
+choix=regsubsets(T3_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "backward")
+plot(choix,scale = "adjr2")
+choix=regsubsets(T3_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "forward")
+plot(choix,scale = "adjr2")
 ```
 
-Critère bic, méthode forward: T1: 1h, 3h, 5h, 6h T2: 1h, 3h, 5h, 6h T3: 5h
-
-```{r}
-mod.debut = lm(T3_6h_R2 ~ ., data = R2)
-mod.fin = lm(T3_6h_R2 ~ T1_1h_R2+T1_3h_R2+T1_5h_R2+T1_6h_R2+T2_1h_R2+T2_3h_R2+T2_5h_R2+T2_6h_R2+T3_5h_R2, data = R2)
-```
-
-```{r}
-anova(mod.fin,mod.debut)
-```
-
-p-valeur = 0.2798
+Critère bic, méthode backward/forward: T1: 1h, 3h, 5h, 6h T2: 1h, 3h, 5h, 6h T3: 5h
 
 ça correspond à l'analyse descriptive précedente, les gènes qui ont eu le traitement T2 ou le traitemet T3 ont des comportements similaires. Cela est cohérent avec le fait que T2 est plus influent sur T3 que T1 sur T3.
 
 On retrouve par ailleurs les résultats de l'analyse précédente puisque les heures les plus influentes sont les heures les plus proches.
+
+On cherche à valider ce sous-modèle en comparant avec le modèle de départ:
+
+```{r}
+mod.debut = lm(T3_6h_R2 ~ ., data = R2)
+mod.fin = lm(T3_6h_R2 ~ T1_1h_R2+T1_3h_R2+T1_5h_R2+T1_6h_R2+T2_1h_R2+T2_3h_R2+T2_5h_R2+T2_6h_R2+T3_5h_R2, data = R2)
+anova(mod.fin,mod.debut)
+```
+
+p-valeur = 0.2798 \> 0.05, on ne rejette pas H0 au risque de 5%, on accepte le sous_modèle.
+
+## Lasso
+
+```{r, fig.height=3}
+lambda_seq=seq(0,1,0.001)
+x = model.matrix(T3_6h_R2~.,data=R2)
+y = data$T3_6h_R2
+fitlasso <- glmnet(x, y , alpha = 1, lambda = lambda_seq, family=c("gaussian"), intercept=F)
+plot(fitlasso,label= TRUE)
+abline(v = 0.7)
+```
+
+On voit que les variables les plus affectantes sont (13, 18): T3_1h_R2, T3_6h_R2 ??
+
+\newpage
+
+## à faire
 
 On veut chercher les variables prédictives qui permettent de discriminer les gènes sur-exprimés (Y\>1) des gènes sous-exprimés (Y\<-1) à 6h pour le traitement T3.
 
@@ -336,5 +346,97 @@ sur_exp = T3R2[T3R2>1]
 ```
 
 ```{r}
-sum(T3R2["T3_1h_R2">1])
+apply(T3R2["T3_1h_R2">1], 2, sum)
 ```
+
+## Etude de l'expression des gènes pour le traitement T1 à 6h :
+
+```{r}
+T1 = data[grep("T1", names(data), value=TRUE)]
+T1R2 = T1[grep("R2", names(T1), value=TRUE)]
+```
+
+```{r include=FALSE}
+reg.mul2 <- lm(T1_6h_R2 ~ ., data = T1R2)
+summary(reg.mul2)
+```
+
+```{r, fig.height=3.5}
+choix=regsubsets(T1_6h_R2~., data = T1R2, nbest = 1, nvmax = 5, method = "backward")
+plot(choix,scale = "bic")
+```
+
+```{r include=FALSE}
+choix=regsubsets(T1_6h_R2~., data = T1R2, nbest = 1, nvmax = 5, method = "backward")
+plot(choix,scale = "bic")
+choix=regsubsets(T1_6h_R2~., data = T1R2, nbest = 1, nvmax = 5, method = "forward")
+plot(choix,scale = "bic")
+choix=regsubsets(T1_6h_R2~., data = T1R2, nbest = 1, nvmax = 5, method = "forward")
+plot(choix,scale = "Cp")
+choix=regsubsets(T1_6h_R2~., data = T1R2, nbest = 1, nvmax = 5, method = "forward")
+plot(choix,scale = "Cp")
+choix=regsubsets(T1_6h_R2~., data = T1R2, nbest = 1, nvmax = 5, method = "forward")
+plot(choix,scale = "adjr2")
+choix=regsubsets(T1_6h_R2~., data = T1R2, nbest = 1, nvmax = 5, method = "forward")
+plot(choix,scale = "adjr2")
+```
+
+```{r}
+mod.debut = lm(T1_6h_R2 ~ ., data = T1R2)
+mod.fin = lm(T1_6h_R2 ~ T1_2h_R2+T1_3h_R2+T1_4h_R2+T1_5h_R2, data = T1R2)
+anova(mod.fin,mod.debut)
+```
+
+p-valeur = 0.5687 \> 0.05, on ne rejette pas H0 au risque de 5%, on valide le sous-modèle.
+
+On étudie sur tous les traitements et tous les temps:
+
+```{r include=FALSE}
+reg.mul_complet <- lm(T1_6h_R2 ~ ., data = R2)
+summary(reg.mul_complet)
+```
+
+```{r, fig.height=3.5}
+choix=regsubsets(T1_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "backward")
+plot(choix,scale = "bic")
+```
+
+```{r include=FALSE}
+choix=regsubsets(T1_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "forward")
+plot(choix,scale = "bic")
+choix=regsubsets(T1_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "backward")
+plot(choix,scale = "Cp")
+choix=regsubsets(T1_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "forward")
+plot(choix,scale = "Cp")
+choix=regsubsets(T1_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "backward")
+plot(choix,scale = "adjr2")
+choix=regsubsets(T1_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "forward")
+plot(choix,scale = "adjr2")
+```
+
+On choisit le sous-modèle avec la criètre bic et méthode backward, on cherche à le valider:
+
+```{r}
+mod.debut = lm(T1_6h_R2 ~ ., data = R2)
+mod.fin = lm(T1_6h_R2 ~ T1_1h_R2+T1_2h_R2+T1_3h_R2+T1_4h_R2+T1_5h_R2+
+               T2_1h_R2+T2_2h_R2+T2_3h_R2+T2_6h_R2+
+             T3_1h_R2+T3_5h_R2+T3_6h_R2, data = R2)
+anova(mod.fin,mod.debut)
+```
+
+p-valeur = 0.09 \> 0.05, on ne rejette pas H0 au risque de 5%, on accepte le sous-modèle.
+
+On voit que l'expression des gènes à 6h pour le traitement T1 est affecté par - les heures finales (3h, 4h, 5h) du traitement T1 - les heures débutantes (1h, 2h, 3h) et finale(6h) du traitements T2 - les heures débutantes (1h) et finales (5h, 6h) du traitement T3
+
+## Lasso
+
+```{r, fig.height=3}
+lambda_seq=seq(0,1,0.001)
+x = model.matrix(T1_6h_R2~.,data=R2)
+y = data$T1_6h_R2
+fitlasso <- glmnet(x, y , alpha = 1, lambda = lambda_seq, family=c("gaussian"), intercept=F)
+plot(fitlasso,label= TRUE)
+abline(v = 0.7)
+```
+
+On voit que les variables les plus affectantes sont ??
