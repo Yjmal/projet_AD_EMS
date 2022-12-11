@@ -280,6 +280,7 @@ On a réalisé notre sélection de variables avec tous les critères (BIC, adjr2
 On garde toutes les variables mais on observe quand même une gradation. Le temps précédent (5h) est le plus influent suivi du temps de démarrage (1h, 2h). On peut faire l'hypothèse d'une périodicité de temps sur l'influence des traitements sur les gènes. Il faudrait avoir tester sur plus d'heures pour valider ou non cette hypothèse.
 
 ### Etude sur tous les traitements et tous les temps
+
 ```{r}
 R2 = data[grep("R2", names(data), value = TRUE)]
 ```
@@ -288,6 +289,7 @@ R2 = data[grep("R2", names(data), value = TRUE)]
 reg.mul_complet <- lm(T3_6h_R2 ~ ., data = R2)
 summary(reg.mul_complet)
 ```
+
 ```{r, fig.height=3.5}
 choix=regsubsets(T3_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "backward")
 plot(choix,scale = "bic")
