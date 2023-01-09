@@ -6,6 +6,10 @@ output:
     number_section : TRUE
 ---
 
+voir la figure mais pas forcément le code de la figure
+
+tout ce qui se trouve dans le Rmarkdown mais pas dans le pdf est indiqué par ce symbole :
+
 ---
 title: "Rapport de projet Analyse de données & Eléments de modélisation statistique"
 author: "Xiaoya Wang, Mickael Song, Yessine Jmal, Florian Grivet"
