@@ -1,0 +1,537 @@
+---
+output: 
+  pdf_document :
+    toc : TRUE
+    toc_depth : 2
+    number_section : TRUE
+---
+
+voir la figure mais pas forcément le code de la figure
+
+tout ce qui se trouve dans le Rmarkdown mais pas dans le pdf est indiqué par ce symbole :
+
+---
+title: "Rapport de projet Analyse de données & Eléments de modélisation statistique"
+author: "Xiaoya Wang, Mickael Song, Yessine Jmal, Florian Grivet"
+institute : "INSA Toulouse / Enseeiht"
+date: "`r Sys.Date()`"
+bibliography: ""
+header-includes:
+   - \usepackage{dsfont}
+   - \usepackage{color}
+   - \newcommand{\1}{\mathds{1}}
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+opts_chunk$set(echo = TRUE)
+opts_knit$set(width=75)
+```
+
+\newpage
+
+# Analyse du jeu de données
+
+## Statistiques descriptives et préparation du jeu de données
+
+```{r include=FALSE}
+rm(list=ls())
+library(reticulate)
+library(ggplot2)
+library(corrplot)
+library(FactoMineR)
+library(factoextra)
+library(gridExtra)
+library(leaps)
+library(MASS)
+library(glmnet)
+```
+
+```{python include=FALSE}
+import numpy as np
+import pandas as pd 
+import matplotlib.pyplot as plt
+import plotly.express as px
+import sklearn as sk
+import seaborn as sns
+import statsmodels.api as sm
+```
+
+```{r}
+# Chargement des données
+data = read.delim("Data_Etudiants_2023.txt",header=TRUE, sep=";")
+```
+
+```{python}
+datapy = pd.read_csv("Data_Etudiants_2023.txt", sep=";")
+```
+
+```{python include=FALSE}
+# Affichage des 6 premières lignes des données
+datapy.head(n=6)
+```
+
+```{r tabdata, echo=F}
+kable(head(round(data[1:8],2)),caption="\\label{tab:tabdata}Les premières lignes du jeu de données.")
+```
+
+\vspace{1em}
+
+Le jeu de données contient `r dim(data)[1]` individus et `r dim(data)[2]` variables, toutes quantitatives.\
+Les attributs du jeu de données sont : `r attributes(data)$names`
+
+\vspace{1em}
+
+```{r include=FALSE}
+print("Quelques statistiques sur les variables : ")
+print(summary(data))
+```
+
+```{python, include=FALSE}
+datapy.describe()
+```
+
+Avec le résultat de la commande `datapy.isnull().sum()`, on voit bien que notre jeu de données est complet.
+
+```{python include=FALSE}
+datapy.isnull().sum()
+```
+
+\newpage
+
+```{r}
+# Boxplot
+ggplot(stack(data), aes(x = ind, y = values))+ 
+  geom_boxplot()+ 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+On remarque que les traitements 2 et 3 ont des boxplots similaires que ça soit pour le réplicat 1 ou pour le réplicat 2. On peut faire l'hypothèse que ces deux traitements ont des résultats similaires. On remarque que ces deux traitements ne sont pas centrés donc qu'ils ont un effet non nul sur les gènes. On note également une dissymétrie pour ces traitements ainsi que de nombreux outliers et une forte variabilité entre les individus.\
+Le traitement 1 est quant à lui beaucoup plus réduit et centré en 0. Le traitement semble donc ne pas avoir d'effet sur les gènes. On remarque que le traitement 1 est symétrique mais possède également beaucoup d'outliers.
+
+```{python include=FALSE}
+fig=px.box(datapy)
+fig.show()
+```
+
+\newpage
+
+```{r}
+corrplot(cor(data), method="ellipse")
+```
+
+Sur ce graphique des corrélations on remarque que le traitement 1 réplicat 1 est fortement correlé au traitement 1 réplicat 2 mais ces derniers semblent totalement décorellés des traitements 2 et 3. On remarque également que les traitements 2 et 3 que ce soit le réplicat 1 ou 2 sont fortement corrélés.
+
+\vfill
+
+```{python include=FALSE}
+plt.figure(figsize = (40,40))
+sns.heatmap(datapy.corr(),cmap = sns.color_palette('coolwarm',as_cmap = True))
+plt.show()
+```
+
+```{r}
+# Fréquence de l'expression des gènes ("sous-exprimés", "normaux" et "sur-exprimés") en fonction des traitements
+BP = array(rep(rep(0,3),36), dim=c(3,36))
+BP[1,] = apply(data>1, 2, sum)
+BP[2,] = apply(data<=1&data>=(-1), 2, sum)
+BP[3,] = apply(data<(-1), 2, sum)
+BP = BP/nrow(data)
+barplot(BP, main="Fréquences", col=c("blue", "grey", "red"), names.arg=c(attributes(data)$names))
+legend(0,0.6, legend=c("sur-exprimé", "normal", "sous-exprimé"), title="Type de gène", box.col="grey", fill=c("blue", "grey", "red"), cex=0.65)
+```
+
+Ce graphique représente la fréquence des gènes "sous-exprimés", "normaux" et "sur-exprimés" pour chaque traitement à toute heure sur les deux réplicats. Ce graphique appuie notre hypothèse que les traitements 2 et 3 sont similaires et que le traitement 1 n'a pas beaucoup d'effet.
+
+```{python include=FALSE}
+d1 = datapy[datapy > 1].count()
+d1 = d1/len(datapy)
+d2 = datapy[(datapy<=1) & (datapy >-1)].count()
+d2 = d2/len(datapy)
+d3 = datapy[ (datapy <=-1)].count()
+d3 = d3/len(datapy)
+somme = pd.DataFrame({'d1':d1,'d2':d2,'d3':d3})
+
+fig = px.bar(somme)
+fig.show()
+```
+
+```{r}
+hist(data[,18], main="Fréquence de la valeur des gènes du traitement 3 à l'heure 6")
+```
+
+On remarque qu'à l'heure 6 (la dernière) du traitement 3, tous les gènes sont soit très sur-exprimé (valeurs $\geq 2$ ), soit très sous-exprimé (valeurs $\leq 2$). C'est comme ça que les gènes du jeu de données ont été choisi.
+
+```{python include=FALSE}
+fig = px.histogram(datapy["T3_6h_R1"])
+fig.show()
+```
+
+## Analyse en composante principale
+
+```{r include=FALSE}
+data_centree_reduite = scale(data)
+data_centree_reduite = as.data.frame(data_centree_reduite)
+res.pca = PCA(data_centree_reduite, ncp=15, graph=F)
+summary(res.pca)
+```
+
+```{r, fig.height=3}
+barplot(cumsum(res.pca$eig[, "percentage of variance"]), main="Percentage of variance")
+abline(h=95, col="blue")
+abline(h=99, col="red")
+```
+
+```{r include=FALSE}
+cumsum(res.pca$eig[, "percentage of variance"])
+```
+
+Pour avoir 95% de l'information, on peut réduire nos données à 10 dimensions.\
+Pour avoir 99% de l'information il suffit de se placer en dimension 18.
+
+```{r, fig.height=3}
+col_trait = rep(rep(c(1,2,3), each=6),2)
+g1 = fviz_pca_ind(res.pca, label="none")
+g2 = fviz_pca_var(res.pca, col.var=col_trait) + scale_color_gradient2(low="blue", mid="black", high="red", midpoint=2)
+grid.arrange(g1,g2,ncol=2)
+```
+
+Les traitements 2 et 3 semblent avoir le même comportement et son selon l'axe 1.\
+Le traitement 1 suit l'axe 2.
+
+```{r include=FALSE}
+# Pourcentage des variables dans la construction des dimensions 1 et 2 :
+res.pca$var$cor[,1]/sum(res.pca$var$cor[,1])*100
+res.pca$var$cor[,2]/sum(res.pca$var$cor[,2])*100
+```
+
+La commande `res.pca$var$cor` nous donne la composition des axes.\
+L'axe 1 nous dit si un gène réagit au traitement 2 ou 3. Si le gène réagit fortement à l'un de ces traitements, il se retrouve sur un côté du graphique (si le gène devient très sous-exprimé ou très sur-exprimé) et s'il ne réagit pas beaucoup à l'un de ces traitement il se trouve au milieu.
+
+L'axe 2 nous dit si un gène réagit au traitement 1. Si le gène réagit fortement à ce traitement, il se retrouve en haut s'il devient sur-exprimé, en bas s'il devient sous-exprimé et s'il ne réagit pas beaucoup, il se trouve au milieu.
+
+\newpage
+
+### Analyse en composante principale sur les données transposées
+
+```{r include=FALSE}
+data_transpose = t(data_centree_reduite)
+res.pca.transpose = PCA(data_transpose, ncp=15, graph=F)
+res.pca.transpose$eig
+summary(res.pca.transpose)
+```
+
+```{r, fig.height=3}
+barplot(cumsum(res.pca.transpose$eig[, "percentage of variance"]), main="Percentage of variance")
+abline(h=95, col="blue")
+abline(h=99, col="red")
+```
+
+Pour avoir 95% de l'information, on peut réduire nos données à 13 dimensions.\
+Pour avoir 99% de l'information il suffit de se placer en dimension 21.
+
+\vspace{2em}
+
+```{r include=FALSE}
+cumsum(res.pca.transpose$eig[, "percentage of variance"])
+```
+
+```{r, fig.height=3}
+g1 = fviz_pca_var(res.pca.transpose, col.var=data$T3_6h_R2, label="none") + scale_color_gradient2(low="blue", mid="black", high="red", midpoint=0)
+g2 = fviz_pca_ind(res.pca.transpose, axes=c(1, 2), autoLab="yes", col.ind=col_trait) + scale_color_gradient2(low="blue", mid="black", high="red", midpoint=2)
+grid.arrange(g1,g2,ncol=2)
+```
+
+Commentaires à faire
+
+\newpage
+
+# Modèle linéaire
+
+## Etude de l'expression des gènes pour le traitement T3 à 6h
+
+On récupère les valeurs du traitement T3 à 6h grâce aux commandes suivantes :
+
+```{r}
+T3 = data[grep("T3", names(data), value=TRUE)]
+T3R2 = T3[grep("R2", names(T3), value=TRUE)]
+```
+
+```{r include=FALSE}
+reg.mul <- lm(T3_6h_R2 ~ ., data = T3R2)
+summary(reg.mul)
+```
+
+```{r, fig.height=3.5}
+choix=regsubsets(T3_6h_R2~., data = T3R2, nbest = 1, nvmax = 5, method = "backward")
+plot(choix,scale = "bic")
+```
+
+```{r include=FALSE}
+choix=regsubsets(T3_6h_R2~., data = T3R2, nbest = 1, nvmax = 5, method = "forward")
+plot(choix,scale = "bic")
+choix=regsubsets(T3_6h_R2~., data = T3R2, nbest = 1, nvmax = 5, method = "backward")
+plot(choix,scale = "adjr2")
+choix=regsubsets(T3_6h_R2~., data = T3R2, nbest = 1, nvmax = 5, method = "forward")
+plot(choix,scale = "adjr2")
+choix=regsubsets(T3_6h_R2~., data = T3R2, nbest = 1, nvmax = 5, method = "backward")
+plot(choix,scale = "Cp")
+choix=regsubsets(T3_6h_R2~., data = T3R2, nbest = 1, nvmax = 5, method = "forward")
+plot(choix,scale = "Cp")
+```
+
+On a réalisé notre sélection de variables avec tous les critères (BIC, adjr2, Cp) et avec les méthodes forward et backward. Nous avons eu les mêmes résultats :
+
+On garde toutes les variables mais on observe quand même une gradation. Le temps précédent (5h) est le plus influent suivi du temps de démarrage (1h, 2h). On peut faire l'hypothèse d'une périodicité de temps sur l'influence des traitements sur les gènes. Il faudrait avoir tester sur plus d'heures pour valider ou non cette hypothèse.
+
+### Etude sur tous les traitements et tous les temps
+
+```{r}
+R2 = data[grep("R2", names(data), value = TRUE)]
+```
+
+```{r include=FALSE}
+reg.mul_complet <- lm(T3_6h_R2 ~ ., data = R2)
+summary(reg.mul_complet)
+```
+
+```{r, fig.height=3.5}
+choix=regsubsets(T3_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "backward")
+plot(choix,scale = "bic")
+```
+
+```{r include=FALSE}
+choix=regsubsets(T3_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "forward")
+plot(choix,scale = "bic")
+choix=regsubsets(T3_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "backward")
+plot(choix,scale = "Cp")
+choix=regsubsets(T3_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "forward")
+plot(choix,scale = "Cp")
+choix=regsubsets(T3_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "backward")
+plot(choix,scale = "adjr2")
+choix=regsubsets(T3_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "forward")
+plot(choix,scale = "adjr2")
+```
+
+Critère bic, méthode backward/forward: T1: 1h, 3h, 5h, 6h T2: 1h, 3h, 5h, 6h T3: 5h
+
+ça correspond à l'analyse descriptive précedente, les gènes qui ont eu le traitement T2 ou le traitemet T3 ont des comportements similaires. Cela est cohérent avec le fait que T2 est plus influent sur T3 que T1 sur T3.
+
+On retrouve par ailleurs les résultats de l'analyse précédente puisque les heures les plus influentes sont les heures les plus proches.
+
+On cherche à valider ce sous-modèle en comparant avec le modèle de départ:
+
+```{r}
+mod.debut = lm(T3_6h_R2 ~ ., data = R2)
+mod.fin = lm(T3_6h_R2 ~ T1_1h_R2+T1_3h_R2+T1_5h_R2+T1_6h_R2+T2_1h_R2+T2_3h_R2+T2_5h_R2+T2_6h_R2+T3_5h_R2, data = R2)
+anova(mod.fin,mod.debut)
+```
+
+p-valeur = 0.2798 \> 0.05, on ne rejette pas H0 au risque de 5%, on accepte le sous_modèle.
+
+## Lasso
+
+```{r, fig.height=3}
+lambda_seq=seq(0,1,0.001)
+x = model.matrix(T3_6h_R2~.,data=R2)
+y = data$T3_6h_R2
+fitlasso <- glmnet(x, y , alpha = 1, lambda = lambda_seq, family=c("gaussian"), intercept=F)
+plot(fitlasso,label= TRUE)
+abline(v = 0.7)
+```
+
+On voit que les variables les plus affectantes sont (13, 18): T3_1h_R2, T3_6h_R2 ??
+
+\newpage
+
+## à faire
+
+On veut chercher les variables prédictives qui permettent de discriminer les gènes sur-exprimés (Y\>1) des gènes sous-exprimés (Y\<-1) à 6h pour le traitement T3.
+
+```{r}
+T36HR2_binomial = R2[-c(6,12)] # Toutes les variables du réplicat 2 sauf les temps 6
+
+T36HR2_binomial$T3_6h_R2[T36HR2_binomial$T3_6h_R2>1] = 1
+T36HR2_binomial$T3_6h_R2[T36HR2_binomial$T3_6h_R2<(-1)] = 0
+glm.T36HR2<-glm(T3_6h_R2~.,data=T36HR2_binomial,family=binomial(link="logit"))
+summary(glm.T36HR2)
+```
+
+```{r}
+T1 = data[grep("T1", names(data), value=TRUE)]
+T1R2 = T1[grep("R2", names(T1), value=TRUE)]
+T1R2_T3 = T1R2
+T1R2_T3["T3_6h_R2"] = data$T3_6h_R2
+T36HR2_binomial = T1R2_T3 # Seulement T1R2 (et la variable a expliqué : T3_6h_R2)
+
+T36HR2_binomial$T3_6h_R2[T36HR2_binomial$T3_6h_R2>1] = 1
+T36HR2_binomial$T3_6h_R2[T36HR2_binomial$T3_6h_R2<(-1)] = 0
+glm.T36HR2<-glm(T3_6h_R2~.,data=T36HR2_binomial,family=binomial(link="logit"))
+summary(glm.T36HR2)
+```
+
+```{r}
+step.backward <- step(glm.T36HR2)
+```
+
+```{r}
+T2 = data[grep("T2", names(data), value=TRUE)]
+T2R2 = T2[grep("R2", names(T2), value=TRUE)]
+T2R2["T3_6h_R2"] = data$T3_6h_R2
+T36HR2_binomial = T2R2#[-c(6)]
+
+T36HR2_binomial$T3_6h_R2[T36HR2_binomial$T3_6h_R2>1] = 1
+T36HR2_binomial$T3_6h_R2[T36HR2_binomial$T3_6h_R2<(-1)] = 0
+glm.T36HR2<-glm(T3_6h_R2~.,data=T36HR2_binomial,family=binomial(link="logit"))
+summary(glm.T36HR2)
+```
+
+```{r}
+step.backward <- step(glm.T36HR2)
+```
+
+```{r}
+T36HR2_binomial = cbind(T3R2, T2R2)
+T36HR2_binomial$T3_6h_R2[T36HR2_binomial$T3_6h_R2>1] = 1
+T36HR2_binomial$T3_6h_R2[T36HR2_binomial$T3_6h_R2<(-1)] = 0
+T36HR2_binomial = T36HR2_binomial[-c(12, 13)] # T3R2 et T2R2 sauf le temps 6
+glm.T36HR2<-glm(T3_6h_R2~.,data=T36HR2_binomial,family=binomial(link="logit"))
+summary(glm.T36HR2)
+```
+
+```{r}
+step.backward <- step(glm.T36HR2)
+```
+
+```{r}
+stepAIC(glm.T36HR2, direction=c("forward"),p=2, trace=0) # AIC
+```
+
+```{python}
+Defaultpy=r.T36HR2_binomial
+y=Defaultpy["T3_6h_R2"]
+x=Defaultpy[Defaultpy.columns.drop("T3_6h_R2")]
+x_stat = sm.add_constant(x)
+modeladditif = sm.Logit(y, x_stat).fit()
+modeladditif.summary()
+```
+
+## Etude de l'expression des gènes pour le traitement T1 à 6h :
+
+```{r}
+T1 = data[grep("T1", names(data), value=TRUE)]
+T1R2 = T1[grep("R2", names(T1), value=TRUE)]
+```
+
+```{r include=FALSE}
+reg.mul2 <- lm(T1_6h_R2 ~ ., data = T1R2)
+summary(reg.mul2)
+```
+
+```{r, fig.height=3.5}
+choix=regsubsets(T1_6h_R2~., data = T1R2, nbest = 1, nvmax = 5, method = "backward")
+plot(choix,scale = "bic")
+```
+
+```{r include=FALSE}
+choix=regsubsets(T1_6h_R2~., data = T1R2, nbest = 1, nvmax = 5, method = "backward")
+plot(choix,scale = "bic")
+choix=regsubsets(T1_6h_R2~., data = T1R2, nbest = 1, nvmax = 5, method = "forward")
+plot(choix,scale = "bic")
+choix=regsubsets(T1_6h_R2~., data = T1R2, nbest = 1, nvmax = 5, method = "forward")
+plot(choix,scale = "Cp")
+choix=regsubsets(T1_6h_R2~., data = T1R2, nbest = 1, nvmax = 5, method = "forward")
+plot(choix,scale = "Cp")
+choix=regsubsets(T1_6h_R2~., data = T1R2, nbest = 1, nvmax = 5, method = "forward")
+plot(choix,scale = "adjr2")
+choix=regsubsets(T1_6h_R2~., data = T1R2, nbest = 1, nvmax = 5, method = "forward")
+plot(choix,scale = "adjr2")
+```
+
+```{r}
+mod.debut = lm(T1_6h_R2 ~ ., data = T1R2)
+mod.fin = lm(T1_6h_R2 ~ T1_2h_R2+T1_3h_R2+T1_4h_R2+T1_5h_R2, data = T1R2)
+anova(mod.fin,mod.debut)
+```
+
+p-valeur = 0.5687 \> 0.05, on ne rejette pas H0 au risque de 5%, on valide le sous-modèle.
+
+On étudie sur tous les traitements et tous les temps:
+
+```{r include=FALSE}
+reg.mul_complet <- lm(T1_6h_R2 ~ ., data = R2)
+summary(reg.mul_complet)
+```
+
+```{r, fig.height=3.5}
+choix=regsubsets(T1_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "backward")
+plot(choix,scale = "bic")
+```
+
+```{r include=FALSE}
+choix=regsubsets(T1_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "forward")
+plot(choix,scale = "bic")
+choix=regsubsets(T1_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "backward")
+plot(choix,scale = "Cp")
+choix=regsubsets(T1_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "forward")
+plot(choix,scale = "Cp")
+choix=regsubsets(T1_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "backward")
+plot(choix,scale = "adjr2")
+choix=regsubsets(T1_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "forward")
+plot(choix,scale = "adjr2")
+```
+
+On choisit le sous-modèle avec la criètre bic et méthode backward, on cherche à le valider:
+
+```{r}
+mod.debut = lm(T1_6h_R2 ~ ., data = R2)
+mod.fin = lm(T1_6h_R2 ~ T1_1h_R2+T1_2h_R2+T1_3h_R2+T1_4h_R2+T1_5h_R2+
+               T2_1h_R2+T2_2h_R2+T2_3h_R2+T2_6h_R2+
+             T3_1h_R2+T3_5h_R2+T3_6h_R2, data = R2)
+anova(mod.fin,mod.debut)
+```
+
+p-valeur = 0.09 \> 0.05, on ne rejette pas H0 au risque de 5%, on accepte le sous-modèle.
+
+On voit que l'expression des gènes à 6h pour le traitement T1 est affecté par - les heures finales (3h, 4h, 5h) du traitement T1 - les heures débutantes (1h, 2h, 3h) et finale(6h) du traitements T2 - les heures débutantes (1h) et finales (5h, 6h) du traitement T3
+
+### Q3
+
+```{r}
+library(nnet)
+Y = data["T1_6h_R2"]
+Y[Y>1] = "sur-exprime"
+Y[Y<(-1) & Y!="sur-exprime"] = "sous-exprime"
+Y[Y!="sur-exprime" & Y!="sous-exprime"] = "non-exprime"
+Y$T1_6h_R2 = as.factor(Y$T1_6h_R2)
+
+dfmodel = R2
+dfmodel["Y"] = Y
+dfmodel = dfmodel[-(6)]
+model <- multinom(Y ~ ., data = dfmodel)
+summary(model)
+
+step.backward <- step(model, trace=0)
+stepAIC(glm.T36HR2, direction=c("forward"),p=2, trace=0) # AIC
+```
+
+backward : T1_1h_R2, T1_2h_R2, T1_3h_R2, T1_4h_R2, T1_5h_R2, \
+T2_1h_R2, T2_2h_R2, T2_3h_R2, T2_6h_R2,\
+T3_1h_R2, T3_2h_R2, T3_3h_R2, T3_5h_R2, T3_6h_R2
+
+forward : \
+T2_1h_R2, T2_2h_R2, T2_3h_R2, T2_4h_R2, T2_5h_R2\
+T3_1h_R2, T3_2h_R2, T3_3h_R2, T3_4h_R2, T3_5h_R2,\
+
+## Lasso
+
+```{r, fig.height=3}
+lambda_seq=seq(0,1,0.001)
+x = model.matrix(T1_6h_R2~.,data=R2)
+y = data$T1_6h_R2
+fitlasso <- glmnet(x, y , alpha = 1, lambda = lambda_seq, family=c("gaussian"), intercept=F)
+plot(fitlasso,label= TRUE)
+abline(v = 0.7)
+```
+
+On voit que les variables les plus affectantes sont ??
