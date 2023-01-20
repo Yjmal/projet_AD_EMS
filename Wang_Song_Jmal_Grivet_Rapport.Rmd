@@ -1,26 +1,20 @@
 ---
-output: 
-  pdf_document :
+title: "Rapport de projet Analyse de données & Eléments de modélisation statistique"
+author: "Xiaoya Wang, Mickael Song, Yessine Jmal, Florian Grivet"
+institute : "INSA Toulouse / ENSEEIHT"
+
+
+output:
+  pdf_document: 
     toc : TRUE
     toc_depth : 2
     number_section : TRUE
----
-
-voir la figure mais pas forcément le code de la figure
-
-tout ce qui se trouve dans le Rmarkdown mais pas dans le pdf est indiqué par ce symbole :
+  
 
 ---
-title: "Rapport de projet Analyse de données & Eléments de modélisation statistique"
-author: "Xiaoya Wang, Mickael Song, Yessine Jmal, Florian Grivet"
-institute : "INSA Toulouse / Enseeiht"
-date: "`r Sys.Date()`"
-bibliography: ""
-header-includes:
-   - \usepackage{dsfont}
-   - \usepackage{color}
-   - \newcommand{\1}{\mathds{1}}
----
+
+Tout ce qui se trouve dans le Rmarkdown mais pas dans le pdf est indiqué par ce symbole : (%%)
+
 
 ```{r setup, include=FALSE}
 library(knitr)
@@ -30,7 +24,32 @@ opts_knit$set(width=75)
 
 \newpage
 
+# Introduction
+
+On observe pour G = 1615 gènes d’une plante modèle les valeurs suivantes :
+$$Y_{gtsr} = log_2 (X{gtsr} + 1) - log_2(X{gt0} + 1)$$ 
+avec 
+\newline
+• $X{gtsr}$ la mesure d’expression du gène g $\in$ {G1, . . . , G1615} pour le traitement t $\in$ {T1, T2, T3}
+pour le réplicat r $\in$ {R1, R2} et au temps s $\in$  {1h, 2h, 3h, 4h, 5h, 6h}
+\newline
+• $X{gt0}$ l’expression du gène g pour un traitement de référence t0
+
+\vspace{1em}
+Nous allons répartir l'étude de ce jeu de données en 4 parties :
+\newline
+• Analyse du jeu de données
+\newline
+• Clustering
+\newline
+• Etude de l'expression des gènes pour le traitement T3 à 6h
+\newline
+• Etude de l'expression des gènes pour le traitement T1 à 6h
+
+
 # Analyse du jeu de données
+
+Nous allons dans cette partie effectuer une analyse des statistiques descriptives et préparer le jeu de données afin d'en sortir les variables redondantes, transformations, outliers et visualiser le jeu de données dans un espace de faible dimension (en particulier l’aspect réplicat biologique, l’effet traitement et l’effet temps)
 
 ## Statistiques descriptives et préparation du jeu de données
 
@@ -56,12 +75,12 @@ import sklearn as sk
 import seaborn as sns
 ```
 
-```{r}
+```{r, echo = F}
 # Chargement des données
 data = read.delim("Data_Etudiants_2023.txt",header=TRUE, sep=";")
 ```
 
-```{python}
+```{python, echo = F}
 datapy = pd.read_csv("Data_Etudiants_2023.txt", sep=";")
 ```
 
@@ -77,7 +96,9 @@ kable(head(round(data[1:8],2)),caption="\\label{tab:tabdata}Les premières ligne
 \vspace{1em}
 
 Le jeu de données contient `r dim(data)[1]` individus et `r dim(data)[2]` variables, toutes quantitatives.\
-Les attributs du jeu de données sont : `r attributes(data)$names`
+Les attributs du jeu de données sont : 
+\newline 
+`r attributes(data)$names`
 
 \vspace{1em}
 
@@ -90,7 +111,7 @@ print(summary(data))
 datapy.describe()
 ```
 
-Avec le résultat de la commande `datapy.isnull().sum()`, on voit bien que notre jeu de données est complet.
+Avec le résultat de la commande python `datapy.isnull().sum()`, on voit bien que notre jeu de données est complet. (%%)
 
 ```{python include=FALSE}
 datapy.isnull().sum()
@@ -98,15 +119,18 @@ datapy.isnull().sum()
 
 \newpage
 
-```{r}
+```{r, echo = F, fig.cap="\\label{fig:boxplots}Boxplots des 36 variables",fig.height=3}
 # Boxplot
 ggplot(stack(data), aes(x = ind, y = values))+ 
   geom_boxplot()+ 
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 ```
 
-On remarque que les traitements 2 et 3 ont des boxplots similaires que ça soit pour le réplicat 1 ou pour le réplicat 2. On peut faire l'hypothèse que ces deux traitements ont des résultats similaires. On remarque que ces deux traitements ne sont pas centrés donc qu'ils ont un effet non nul sur les gènes. On note également une dissymétrie pour ces traitements ainsi que de nombreux outliers et une forte variabilité entre les individus.\
-Le traitement 1 est quant à lui beaucoup plus réduit et centré en 0. Le traitement semble donc ne pas avoir d'effet sur les gènes. On remarque que le traitement 1 est symétrique mais possède également beaucoup d'outliers.
+On remarque dans la figure \ref{fig:boxplots} que les boxplots du traitement 2 et du traitement 3 ne sont pas centrés, ils ont donc un effet non nul sur les gènes. En étudiant la forme des boxplots, on remarque une dissymétrie pour ces deux traitements, des nombreux outliers ainsi qu'une forte variabilité entre les individus.
+\newline
+Les boxplots du traitement 2 et du traitement 3 sont d'ailleurs similaires, quelque soit le réplicat. On peut donc faire l'hypothèse que ces deux traitements donnent des résultats similaires. 
+\vspace{0.2cm}
+Le traitement 1 est quant à lui beaucoup plus réduit et centré en 0. Ce traitement semble donc ne pas avoir d'effet sur les gènes. Les boxplots du traitement 1 sont symétriques mais possèdent beaucoup d'outliers.
 
 ```{python include=FALSE}
 fig=px.box(datapy)
@@ -115,21 +139,23 @@ fig.show()
 
 \newpage
 
-```{r}
+```{r, echo = F, fig.cap="\\label{fig:corrplots}Graphique des corrélations des 36 variables", fig.height=5}
 corrplot(cor(data), method="ellipse")
 ```
 
-Sur ce graphique des corrélations on remarque que le traitement 1 réplicat 1 est fortement correlé au traitement 1 réplicat 2 mais ces derniers semblent totalement décorellés des traitements 2 et 3. On remarque également que les traitements 2 et 3 que ce soit le réplicat 1 ou 2 sont fortement corrélés.
+La figure \ref{fig:corrplots} des corrélations nous confirme bien l'hypothèse précédente, les traitements 2 et 3 sont fortement corrélés alors que ces traitements semblent totalement décorellés du traitements 1. 
+\newline
+On peut également noter le fait que, pour un traitement donné, le réplicat 1 et le réplicat 2 sont fortement correlé entre eux, ce qui est cohérent puisque ce sont des réplicats biologiques. On pourra donc par la suite uniquement faire notre étude uniquement sur 1 seul réplicat, sans perdre trop d'informations.
 
-\vfill
+\newpage
 
-```{python include=FALSE}
+```{python include=FALSE, echo = F}
 plt.figure(figsize = (40,40))
 sns.heatmap(datapy.corr(),cmap = sns.color_palette('coolwarm',as_cmap = True))
 plt.show()
 ```
 
-```{r}
+```{r, echo = F, fig.cap="\\label{fig:expressiongenes}Fréquence de l'expression des gènes sous-exprimés, normaux et sur-exprimés en fonction des traitements", fig.height=3.3}
 # Fréquence de l'expression des gènes ("sous-exprimés", "normaux" et "sur-exprimés") en fonction des traitements
 BP = array(rep(rep(0,3),36), dim=c(3,36))
 BP[1,] = apply(data>1, 2, sum)
@@ -140,9 +166,12 @@ barplot(BP, main="Fréquences", col=c("blue", "grey", "red"), names.arg=c(attrib
 legend(0,0.6, legend=c("sur-exprimé", "normal", "sous-exprimé"), title="Type de gène", box.col="grey", fill=c("blue", "grey", "red"), cex=0.65)
 ```
 
-Ce graphique représente la fréquence des gènes "sous-exprimés", "normaux" et "sur-exprimés" pour chaque traitement à toute heure sur les deux réplicats. Ce graphique appuie notre hypothèse que les traitements 2 et 3 sont similaires et que le traitement 1 n'a pas beaucoup d'effet.
+La graphique \ref{fig:expressiongenes} représente la fréquence des gènes "sous-exprimés", "normaux" et "sur-exprimés" pour chaque traitement à toute heure sur les deux réplicats. 
+\newline
+Il appuie notre hypothèse que les traitements 2 et 3 sont similaires et que le traitement 1 n'a pas beaucoup d'effet.
 
-```{python include=FALSE}
+
+```{python include=FALSE, echo = F}
 d1 = datapy[datapy > 1].count()
 d1 = d1/len(datapy)
 d2 = datapy[(datapy<=1) & (datapy >-1)].count()
@@ -155,28 +184,29 @@ fig = px.bar(somme)
 fig.show()
 ```
 
-```{r}
-hist(data[,18], main="Fréquence de la valeur des gènes du traitement 3 à l'heure 6")
+```{r, echo = F, fig.cap="\\label{fig:freqG3H6}Fréquence de la valeur des gènes du traitement 3 à l'heure 6", fig.height=2.5}
+hist(data[,18])
 ```
 
-On remarque qu'à l'heure 6 (la dernière) du traitement 3, tous les gènes sont soit très sur-exprimé (valeurs $\geq 2$ ), soit très sous-exprimé (valeurs $\leq 2$). C'est comme ça que les gènes du jeu de données ont été choisi.
+On remarque qu'à la dernière heure (6h) du traitement 3, tous les gènes sont soit très sur-exprimé (valeurs $\geq 2$ ), soit très sous-exprimé (valeurs $\leq 2$). Les gènes du jeu de données ont donc été choisis en fonction de T3_6H.
 
 ```{python include=FALSE}
 fig = px.histogram(datapy["T3_6h_R1"])
 fig.show()
 ```
 
+\newpage
 ## Analyse en composante principale
 
-```{r include=FALSE}
+```{r include=FALSE, echo = F}
 data_centree_reduite = scale(data)
 data = as.data.frame(data_centree_reduite)
 res.pca = PCA(data, ncp=15, graph=F)
 summary(res.pca)
 ```
 
-```{r, fig.height=3}
-barplot(cumsum(res.pca$eig[, "percentage of variance"]), main="Percentage of variance")
+```{r, echo = F,fig.cap="\\label{fig:variancepercentage}Variance expliquée cumulée (en %) des différentes composantes principales", fig.height=3}
+barplot(cumsum(res.pca$eig[, "percentage of variance"]))
 abline(h=95, col="blue")
 abline(h=99, col="red")
 ```
@@ -185,29 +215,32 @@ abline(h=99, col="red")
 cumsum(res.pca$eig[, "percentage of variance"])
 ```
 
-Pour avoir 95% de l'information, on peut réduire nos données à 10 dimensions.\
-Pour avoir 99% de l'information il suffit de se placer en dimension 18.
+D'après le graphique \ref{fig:variancepercentage}, on note que : 
+\newline
+- Pour avoir 95% de l'information, on peut réduire nos données à 10 dimensions.
+\newline
+- Pour avoir 99% de l'information il suffit de se placer en dimension 18.
 
-```{r, fig.height=3}
+
+```{r, echo = F, fig.cap="\\label{fig:pca2components}Visualitaion de l'ACP sur les deux premières composantes principales, pour les individus (à gauche) et pour les variables (à droite)", fig.height=2.5}
 col_trait = rep(rep(c(1,2,3), each=6),2)
-g1 = fviz_pca_ind(res.pca, label="none")
+g1 = fviz_pca_ind(res.pca, label="n one")
 g2 = fviz_pca_var(res.pca, col.var=col_trait) + scale_color_gradient2(low="blue", mid="black", high="red", midpoint=2)
 grid.arrange(g1,g2,ncol=2)
 ```
 
-Les traitements 2 et 3 semblent avoir le même comportement et son selon l'axe 1.\
-Le traitement 1 suit l'axe 2.
 
-```{r include=FALSE}
+
+```{r include=FALSE, echo = F}
 # Pourcentage des variables dans la construction des dimensions 1 et 2 :
 res.pca$var$cor[,1]/sum(res.pca$var$cor[,1])*100
 res.pca$var$cor[,2]/sum(res.pca$var$cor[,2])*100
 ```
 
-La commande `res.pca$var$cor` nous donne la composition des axes.\
-L'axe 1 nous dit si un gène réagit au traitement 2 ou 3. Si le gène réagit fortement à l'un de ces traitements, il se retrouve sur un côté du graphique (si le gène devient très sous-exprimé ou très sur-exprimé) et s'il ne réagit pas beaucoup à l'un de ces traitement il se trouve au milieu.
 
-L'axe 2 nous dit si un gène réagit au traitement 1. Si le gène réagit fortement à ce traitement, il se retrouve en haut s'il devient sur-exprimé, en bas s'il devient sous-exprimé et s'il ne réagit pas beaucoup, il se trouve au milieu.
+La première composante principale de la figure \ref{fig:pca2components} nous dit si un gène réagit au traitement 2 ou 3. Si le gène réagit fortement à l'un de ces traitements, il se trouve aux extrémités du cercle (si le gène devient très sous-exprimé ou très sur-exprimé) et s'il ne réagit pas beaucoup à l'un de ces traitement il se trouve au milieu du cercle.
+
+La deuxième composante principale nous dit si un gène réagit au traitement 1. Si le gène réagit fortement à ce traitement, c'est-à-dire s'il est sur-exprimé (resp. sous-exprimé), il se retrouve en haut (resp. en bas) du cercle. Par contre, si le gène ne réagit pas beaucoup au traitement 1, il se trouve au milieu.
 
 \newpage
 
@@ -220,13 +253,16 @@ res.pca.transpose$eig
 summary(res.pca.transpose)
 ```
 
-```{r, fig.height=3}
-barplot(cumsum(res.pca.transpose$eig[, "percentage of variance"]), main="Percentage of variance")
+```{r, echo = F, fig.cap="\\label{fig:variancepercentage2}Variance expliquée cumulée (en %) des différentes composantes principales", fig.height=3}
+barplot(cumsum(res.pca.transpose$eig[, "percentage of variance"]))
 abline(h=95, col="blue")
 abline(h=99, col="red")
 ```
 
-Pour avoir 95% de l'information, on peut réduire nos données à 13 dimensions.\
+D'après le graphique \ref{fig:variancepercentage2}, on note que : 
+\newline
+Pour avoir 95% de l'information, on peut réduire nos données à 13 dimensions.
+\newline
 Pour avoir 99% de l'information il suffit de se placer en dimension 21.
 
 \vspace{2em}
@@ -235,7 +271,7 @@ Pour avoir 99% de l'information il suffit de se placer en dimension 21.
 cumsum(res.pca.transpose$eig[, "percentage of variance"])
 ```
 
-```{r, fig.height=3}
+```{r, echo = F, fig.height=3}
 g1 = fviz_pca_var(res.pca.transpose, col.var=data$T3_6h_R2, label="none") + scale_color_gradient2(low="blue", mid="black", high="red", midpoint=0)
 g2 = fviz_pca_ind(res.pca.transpose, axes=c(1, 2), autoLab="yes", col.ind=col_trait) + scale_color_gradient2(low="blue", mid="black", high="red", midpoint=2)
 grid.arrange(g1,g2,ncol=2)
@@ -245,13 +281,13 @@ Commentaires à faire
 
 \newpage
 
-# Modèle linéaire
+# Modèle linéaire : étude de l’expression des gènes pour le traitement T3 et le traitement T1 à 6h
 
 ## Etude de l'expression des gènes pour le traitement T3 à 6h
 
-On récupère les valeurs du traitement T3 à 6h grâce aux commandes suivantes :
 
-```{r}
+
+```{r, echo = F}
 T3 = data[grep("T3", names(data), value=TRUE)]
 T3R2 = T3[grep("R2", names(T3), value=TRUE)]
 ```
@@ -261,7 +297,7 @@ reg.mul <- lm(T3_6h_R2 ~ ., data = T3R2)
 summary(reg.mul)
 ```
 
-```{r, fig.height=3.5}
+```{r, echo = F, fig.cap="\\label{fig:selection1}Selection de variable du traitement 3 selon le critère BIC et la méthode backward", fig.height=3.5}
 choix=regsubsets(T3_6h_R2~., data = T3R2, nbest = 1, nvmax = 5, method = "backward")
 plot(choix,scale = "bic")
 ```
@@ -281,11 +317,11 @@ plot(choix,scale = "Cp")
 
 On a réalisé notre sélection de variables avec tous les critères (BIC, adjr2, Cp) et avec les méthodes forward et backward. Nous avons eu les mêmes résultats :
 
-On garde toutes les variables mais on observe quand même une gradation. Le temps précédent (5h) est le plus influent suivi du temps de démarrage (1h, 2h). On peut faire l'hypothèse d'une périodicité de temps sur l'influence des traitements sur les gènes. Il faudrait avoir tester sur plus d'heures pour valider ou non cette hypothèse.
+On garde toutes les variables mais on observe quand même une gradation. Le temps précédent (5h) est le plus influent suivi du temps de démarrage (1h, 2h). On peut faire l'hypothèse d'une périodicité de temps sur l'influence des traitements sur les gènes. Il faudrait tester cette sélection de variable sur plus d'heures afin valider ou non cette hypothèse.
 
-### Etude sur tous les traitements et tous les temps
+## Etude sur tous les traitements et tous les temps
 
-```{r}
+```{r, echo = F}
 R2 = data[grep("R2", names(data), value = TRUE)]
 ```
 
@@ -294,7 +330,8 @@ reg.mul_complet <- lm(T3_6h_R2 ~ ., data = R2)
 summary(reg.mul_complet)
 ```
 
-```{r, fig.height=3.5}
+
+```{r, echo = F, fig.cap="\\label{fig:selection2}Selection de variable sur tous les traitement selon le critère BIC et la méthode backward", fig.height=3.5}
 choix=regsubsets(T3_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "backward")
 plot(choix,scale = "bic")
 ```
@@ -312,21 +349,22 @@ choix=regsubsets(T3_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "forward
 plot(choix,scale = "adjr2")
 ```
 
-Critère bic, méthode backward/forward: T1: 1h, 3h, 5h, 6h T2: 1h, 3h, 5h, 6h T3: 5h
+D'après la figure \ref{fig:selection2} (et les autres figures qui ont été réalisé sur le R-markdown), on trouve que :
+\newline
+- On sélectionne les variables suivantes pour T1: 1h, 3h, 5h, 6h, pour T2: 1h, 3h, 5h, 6h et pour T3: 5h. Cela rejoint l'analyse descriptive précedente : les gènes qui ont eu le traitement T2 ou le traitemet T3 ont des comportements similaires. 
+\newline
+- On retrouve, par ailleurs, les résultats de l'analyse de la figure \ref{fig:selection1} puisque les heures les plus influentes sont les heures les plus proches de 6h.
 
-ça correspond à l'analyse descriptive précedente, les gènes qui ont eu le traitement T2 ou le traitemet T3 ont des comportements similaires. Cela est cohérent avec le fait que T2 est plus influent sur T3 que T1 sur T3.
+\newpage
+On cherche maintenant à valider ce sous-modèle en comparant avec le modèle de départ :
 
-On retrouve par ailleurs les résultats de l'analyse précédente puisque les heures les plus influentes sont les heures les plus proches.
-
-On cherche à valider ce sous-modèle en comparant avec le modèle de départ:
-
-```{r}
+```{r, echo = F, fig.cap="\\label{fig:testSM1}Test de sous modèle du modèle complet contre le modèle après sélection de variables"}
 mod.debut = lm(T3_6h_R2 ~ ., data = R2)
 mod.fin = lm(T3_6h_R2 ~ T1_1h_R2+T1_3h_R2+T1_5h_R2+T1_6h_R2+T2_1h_R2+T2_3h_R2+T2_5h_R2+T2_6h_R2+T3_5h_R2, data = R2)
 anova(mod.fin,mod.debut)
 ```
 
-p-valeur = 0.2798 \> 0.05, on ne rejette pas H0 au risque de 5%, on accepte le sous_modèle.
+La p-valeur est égale 0.2798 et est supérieure à 0.05, on ne rejette don pas H0 au risque de 5%, on accepte donc le sous_modèle.
 
 ## Lasso
 
@@ -339,7 +377,7 @@ plot(fitlasso,label= TRUE)
 abline(v = 0.7)
 ```
 
-On voit que les variables les plus affectantes sont (13, 18): T3_1h_R2, T3_6h_R2 ??
+On voit que les variables les plus affectantes sont (13, 18): T3_1h_R2, T3_6h_R2 
 
 \newpage
 
@@ -446,3 +484,4 @@ abline(v = 0.7)
 ```
 
 On voit que les variables les plus affectantes sont ??
+
