@@ -281,9 +281,10 @@ Commentaires à faire
 
 \newpage
 
-# Modèle linéaire : étude de l’expression des gènes pour le traitement T3 et le traitement T1 à 6h
+# Etude de l'expression des gènes pour le traitement T3 à 6h
 
-## Etude de l'expression des gènes pour le traitement T3 à 6h
+## Modèle linéaire
+
 
 
 
@@ -319,7 +320,7 @@ On a réalisé notre sélection de variables avec tous les critères (BIC, adjr2
 
 On garde toutes les variables mais on observe quand même une gradation. Le temps précédent (5h) est le plus influent suivi du temps de démarrage (1h, 2h). On peut faire l'hypothèse d'une périodicité de temps sur l'influence des traitements sur les gènes. Il faudrait tester cette sélection de variable sur plus d'heures afin valider ou non cette hypothèse.
 
-## Etude sur tous les traitements et tous les temps
+### Etude sur tous les traitements et tous les temps
 
 ```{r, echo = F}
 R2 = data[grep("R2", names(data), value = TRUE)]
@@ -364,11 +365,11 @@ mod.fin = lm(T3_6h_R2 ~ T1_1h_R2+T1_3h_R2+T1_5h_R2+T1_6h_R2+T2_1h_R2+T2_3h_R2+T2
 anova(mod.fin,mod.debut)
 ```
 
-La p-valeur est égale 0.2798 et est supérieure à 0.05, on ne rejette don pas H0 au risque de 5%, on accepte donc le sous_modèle.
+La p-valeur est égale 0.2798 et est supérieure à 0.05, on ne rejette don pas H0 au risque de 5%, on accepte donc le sous modèle.
 
-## Lasso
+### Lasso
 
-```{r, fig.height=3}
+```{r, echo = F, fig.height=3}
 lambda_seq=seq(0,1,0.001)
 x = model.matrix(T3_6h_R2~.,data=R2)
 y = data$T3_6h_R2
@@ -381,7 +382,7 @@ On voit que les variables les plus affectantes sont (13, 18): T3_1h_R2, T3_6h_R2
 
 \newpage
 
-## à faire
+## Modèle linéaire généralisé
 
 On veut chercher les variables prédictives qui permettent de discriminer les gènes sur-exprimés (Y\>1) des gènes sous-exprimés (Y\<-1) à 6h pour le traitement T3.
 
@@ -393,9 +394,11 @@ sur_exp = T3R2[T3R2>1]
 apply(T3R2["T3_1h_R2">1], 2, sum)
 ```
 
-## Etude de l'expression des gènes pour le traitement T1 à 6h :
+# Etude de l'expression des gènes pour le traitement T1 à 6h 
 
-```{r}
+## Modèle linéaire
+
+```{r, echo = F}
 T1 = data[grep("T1", names(data), value=TRUE)]
 T1R2 = T1[grep("R2", names(T1), value=TRUE)]
 ```
@@ -405,7 +408,7 @@ reg.mul2 <- lm(T1_6h_R2 ~ ., data = T1R2)
 summary(reg.mul2)
 ```
 
-```{r, fig.height=3.5}
+```{r, echo = F, , fig.cap="\\label{fig:selection3}Selection de variable du traitement 1 selon le critère BIC et la méthode backward", fig.height=3.5}
 choix=regsubsets(T1_6h_R2~., data = T1R2, nbest = 1, nvmax = 5, method = "backward")
 plot(choix,scale = "bic")
 ```
@@ -424,8 +427,13 @@ plot(choix,scale = "adjr2")
 choix=regsubsets(T1_6h_R2~., data = T1R2, nbest = 1, nvmax = 5, method = "forward")
 plot(choix,scale = "adjr2")
 ```
+On a réalisé notre sélection de variables avec tous les critères (BIC, adjr2, Cp) et avec les méthodes forward et backward. Nous avons eu les mêmes résultats :
 
-```{r}
+On garde toutes les variables sauf T1_1h_R2.
+
+On cherche à valider ce sous-modèle :
+
+```{r, echo = F}
 mod.debut = lm(T1_6h_R2 ~ ., data = T1R2)
 mod.fin = lm(T1_6h_R2 ~ T1_2h_R2+T1_3h_R2+T1_4h_R2+T1_5h_R2, data = T1R2)
 anova(mod.fin,mod.debut)
@@ -433,14 +441,14 @@ anova(mod.fin,mod.debut)
 
 p-valeur = 0.5687 \> 0.05, on ne rejette pas H0 au risque de 5%, on valide le sous-modèle.
 
-On étudie sur tous les traitements et tous les temps:
+### Etude sur tous les traitements et tous les temps
 
-```{r include=FALSE}
+```{r, echo = F, include=FALSE}
 reg.mul_complet <- lm(T1_6h_R2 ~ ., data = R2)
 summary(reg.mul_complet)
 ```
 
-```{r, fig.height=3.5}
+```{r, fig.cap="\\label{fig:selection4}Selection de variable sur tous les traitement selon le critère BIC et la méthode backward",fig.height=3.5}
 choix=regsubsets(T1_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "backward")
 plot(choix,scale = "bic")
 ```
@@ -458,9 +466,18 @@ choix=regsubsets(T1_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "forward
 plot(choix,scale = "adjr2")
 ```
 
-On choisit le sous-modèle avec la criètre bic et méthode backward, on cherche à le valider:
 
-```{r}
+D'après la figure \ref{fig:selection4} (et les autres figures qui ont été réalisé sur le R-markdown), on trouve que :
+\newline
+- On sélectionne les variables suivantes pour T1: 1h, 2h, 3h, 4h, 5h, 6h, pour T2: 1h, 2h, 3h, 6h et pour T3: 1h, 5h, 6h.  
+\newline
+- On retrouve, par ailleurs, les résultats de l'analyse de la figure \ref{fig:selection3} puisque les heures les plus influentes sont les heures les plus proches de 6h.
+
+\newpage
+On cherche maintenant à valider ce sous-modèle en comparant avec le modèle de départ :
+
+
+```{r, echo = F}
 mod.debut = lm(T1_6h_R2 ~ ., data = R2)
 mod.fin = lm(T1_6h_R2 ~ T1_1h_R2+T1_2h_R2+T1_3h_R2+T1_4h_R2+T1_5h_R2+
                T2_1h_R2+T2_2h_R2+T2_3h_R2+T2_6h_R2+
@@ -472,7 +489,7 @@ p-valeur = 0.09 \> 0.05, on ne rejette pas H0 au risque de 5%, on accepte le sou
 
 On voit que l'expression des gènes à 6h pour le traitement T1 est affecté par - les heures finales (3h, 4h, 5h) du traitement T1 - les heures débutantes (1h, 2h, 3h) et finale(6h) du traitements T2 - les heures débutantes (1h) et finales (5h, 6h) du traitement T3
 
-## Lasso
+### Lasso
 
 ```{r, fig.height=3}
 lambda_seq=seq(0,1,0.001)
@@ -485,3 +502,4 @@ abline(v = 0.7)
 
 On voit que les variables les plus affectantes sont ??
 
+## Modèle linéaire généralisé
