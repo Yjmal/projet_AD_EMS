@@ -538,6 +538,7 @@ ggplot(df,aes(x=K,y=Silhouette))+
 même résultat: 2 class
 
 ```{r, fig.height=3}
+resPAM <- pam(coord, 2, metric = "euclidean")
 table(km$cluster,resPAM$clustering) # même pour kmeans et PAM
 ```
 ## CAH:
