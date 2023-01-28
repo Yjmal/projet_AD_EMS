@@ -45,6 +45,8 @@ library(gridExtra)
 library(leaps)
 library(MASS)
 library(glmnet)
+library(plotly)
+library(VGAM)
 ```
 
 ```{python include=FALSE}
@@ -344,77 +346,88 @@ On voit que les variables les plus affectantes sont (13, 18): T3_1h_R2, T3_6h_R2
 
 \newpage
 
-## à faire
+# A AJOUTER FLORIAN 1
 
 On veut chercher les variables prédictives qui permettent de discriminer les gènes sur-exprimés (Y\>1) des gènes sous-exprimés (Y\<-1) à 6h pour le traitement T3.
 
 ```{r}
-T36HR2_binomial = R2[-c(6,12)] # Toutes les variables du réplicat 2 sauf les temps 6
-
+T36HR2_binomial = R2 # Toutes les variables du réplicat 2
+# On rend T3_6h_R2 binomial
 T36HR2_binomial$T3_6h_R2[T36HR2_binomial$T3_6h_R2>1] = 1
 T36HR2_binomial$T3_6h_R2[T36HR2_binomial$T3_6h_R2<(-1)] = 0
-glm.T36HR2<-glm(T3_6h_R2~.,data=T36HR2_binomial,family=binomial(link="logit"))
+T36HR2_binomial$T3_6h_R2 = as.factor(T36HR2_binomial$T3_6h_R2)
+# Modèle linéaire généralisé
+glm.T36HR2<-glm(T36HR2_binomial$T3_6h_R2~., data=T36HR2_binomial,family=binomial(link="logit"), control = glm.control(maxit = 100))
 summary(glm.T36HR2)
 ```
+
+```{r include=F}
+step.backward <- step(glm.T36HR2, trace=F)
+summary(step.backward)
+```
+
+```{r include=F}
+stepAIC(glm.T36HR2, direction=c("forward"),p=2, trace=F) # AIC
+```
+
+En prenant en compte toutes les variables, le modèle linéaire généralisé n'arrive pas à bien ajuster le modèle. On remarque que toutes les pvaleurs sont égales à 1.\
+Ceci est probablement dû au fait que les variables sont très liées les unes aux autres.\
+Cependant, lorsqu'on fait une sélection de variable "backward" sur notre modèle, on obtient que T3_6h_R2 peut s'expliquer par les variables : T1_4h_R2, T1_6h_R2, T2_5h_R2, T3_3h_R2.
+
+Peut importe les combinaisons de traitement qu'on prend en pour expliquer T3_6h_R2, on obtient la même erreur (des pvaleurs toutes égales à 1) sauf lorsqu'on prend seulement le traitement 1. \
+Dans ce cas, on obtient que T3_6h_R2 s'explique par T1_1h_R2, T1_2h_R2, T1_3h_R2, T1_4h_R2, T1_6h_R2 par une sélection de variable "backward".
 
 ```{r}
 T1 = data[grep("T1", names(data), value=TRUE)]
 T1R2 = T1[grep("R2", names(T1), value=TRUE)]
-T1R2_T3 = T1R2
-T1R2_T3["T3_6h_R2"] = data$T3_6h_R2
-T36HR2_binomial = T1R2_T3 # Seulement T1R2 (et la variable a expliqué : T3_6h_R2)
+T1R2_T3_6h_R2 = T1R2
+T1R2_T3_6h_R2["T3_6h_R2"] = data$T3_6h_R2 # Seulement T1R2 (et la variable à expliquer : T3_6h_R2)
 
-T36HR2_binomial$T3_6h_R2[T36HR2_binomial$T3_6h_R2>1] = 1
-T36HR2_binomial$T3_6h_R2[T36HR2_binomial$T3_6h_R2<(-1)] = 0
-glm.T36HR2<-glm(T3_6h_R2~.,data=T36HR2_binomial,family=binomial(link="logit"))
-summary(glm.T36HR2)
+T1R2_T3_6h_R2$T3_6h_R2[T1R2_T3_6h_R2$T3_6h_R2>1] = 1
+T1R2_T3_6h_R2$T3_6h_R2[T1R2_T3_6h_R2$T3_6h_R2<(-1)] = 0
+T1R2_T3_6h_R2$T3_6h_R2 = as.factor(T1R2_T3_6h_R2$T3_6h_R2)
+glm.T1R2_T3_6h_R2<-glm(T3_6h_R2~.,data=T1R2_T3_6h_R2,family=binomial(link="logit"))
+summary(glm.T1R2_T3_6h_R2)
 ```
 
-```{r}
-step.backward <- step(glm.T36HR2)
+```{r include=F}
+step.backward <- step(glm.T1R2_T3_6h_R2, trace=F)
+summary(step.backward)
 ```
 
-```{r}
+```{r include=F}
+stepAIC(glm.T1R2_T3_6h_R2, direction=c("forward"),p=2, trace=F) # AIC
+```
+
+```{r include=F}
+# D'autres combinaisons
+# Seulement T2
 T2 = data[grep("T2", names(data), value=TRUE)]
 T2R2 = T2[grep("R2", names(T2), value=TRUE)]
 T2R2["T3_6h_R2"] = data$T3_6h_R2
-T36HR2_binomial = T2R2#[-c(6)]
-
+T36HR2_binomial = T2R2[-c(6)]
 T36HR2_binomial$T3_6h_R2[T36HR2_binomial$T3_6h_R2>1] = 1
 T36HR2_binomial$T3_6h_R2[T36HR2_binomial$T3_6h_R2<(-1)] = 0
-glm.T36HR2<-glm(T3_6h_R2~.,data=T36HR2_binomial,family=binomial(link="logit"))
+T36HR2_binomial$T3_6h_R2 = as.factor(T36HR2_binomial$T3_6h_R2)
+glm.T36HR2<-glm(T3_6h_R2~.,data=T36HR2_binomial,family=binomial(link="logit"), control = glm.control(maxit = 100))
 summary(glm.T36HR2)
-```
+step.backward <- step(glm.T36HR2, trace=F)
+summary(step.backward)
 
-```{r}
-step.backward <- step(glm.T36HR2)
-```
-
-```{r}
+# T2 et T3
 T36HR2_binomial = cbind(T3R2, T2R2)
 T36HR2_binomial$T3_6h_R2[T36HR2_binomial$T3_6h_R2>1] = 1
 T36HR2_binomial$T3_6h_R2[T36HR2_binomial$T3_6h_R2<(-1)] = 0
 T36HR2_binomial = T36HR2_binomial[-c(12, 13)] # T3R2 et T2R2 sauf le temps 6
-glm.T36HR2<-glm(T3_6h_R2~.,data=T36HR2_binomial,family=binomial(link="logit"))
+T36HR2_binomial$T3_6h_R2 = as.factor(T36HR2_binomial$T3_6h_R2)
+glm.T36HR2<-glm(T3_6h_R2~.,data=T36HR2_binomial,family=binomial(link="logit"), control = glm.control(maxit = 100))
 summary(glm.T36HR2)
-```
-
-```{r}
-step.backward <- step(glm.T36HR2)
-```
-
-```{r}
+step.backward <- step(glm.T36HR2, trace=F)
+summary(step.backward)
 stepAIC(glm.T36HR2, direction=c("forward"),p=2, trace=0) # AIC
 ```
 
-```{python}
-Defaultpy=r.T36HR2_binomial
-y=Defaultpy["T3_6h_R2"]
-x=Defaultpy[Defaultpy.columns.drop("T3_6h_R2")]
-x_stat = sm.add_constant(x)
-modeladditif = sm.Logit(y, x_stat).fit()
-modeladditif.summary()
-```
+# Fin A AJOUTER FLORIAN 1
 
 ## Etude de l'expression des gènes pour le traitement T1 à 6h :
 
@@ -495,43 +508,75 @@ p-valeur = 0.09 \> 0.05, on ne rejette pas H0 au risque de 5%, on accepte le sou
 
 On voit que l'expression des gènes à 6h pour le traitement T1 est affecté par - les heures finales (3h, 4h, 5h) du traitement T1 - les heures débutantes (1h, 2h, 3h) et finale(6h) du traitements T2 - les heures débutantes (1h) et finales (5h, 6h) du traitement T3
 
-### Q3
+# A AJOUTER FLORIAN 2
+
+On veut chercher les variables prédictives qui permettent de discriminer les gènes sur-exprimés (Y\>1), les gènes sous-exprimés (Y\<-1), et les gènes non-exprimés à 6h pour le traitement T1.
 
 ```{r}
 library(nnet)
 Y = data["T1_6h_R2"]
-Y[Y>1] = "sur-exprime"
-Y[Y<(-1) & Y!="sur-exprime"] = "sous-exprime"
+Y[Y<(-1)] = "sous-exprime"
+Y[Y>1 & Y!="sous-exprime"] = "sur-exprime"
 Y[Y!="sur-exprime" & Y!="sous-exprime"] = "non-exprime"
 Y$T1_6h_R2 = as.factor(Y$T1_6h_R2)
 
 dfmodel = R2
 dfmodel["Y"] = Y
 dfmodel = dfmodel[-(6)]
-model <- multinom(Y ~ ., data = dfmodel)
+model <- multinom(Y ~ ., data = dfmodel, trace=F)
 summary(model)
-
-step.backward <- step(model, trace=0)
-stepAIC(glm.T36HR2, direction=c("forward"),p=2, trace=0) # AIC
 ```
 
-backward : T1_1h_R2, T1_2h_R2, T1_3h_R2, T1_4h_R2, T1_5h_R2, \
-T2_1h_R2, T2_2h_R2, T2_3h_R2, T2_6h_R2,\
-T3_1h_R2, T3_2h_R2, T3_3h_R2, T3_5h_R2, T3_6h_R2
+```{r include=F}
+step.backward <- step(model, trace=F)
+summary(step.backward)
+```
 
-forward : \
-T2_1h_R2, T2_2h_R2, T2_3h_R2, T2_4h_R2, T2_5h_R2\
-T3_1h_R2, T3_2h_R2, T3_3h_R2, T3_4h_R2, T3_5h_R2,\
+En faisant une sélection de modèle en mode "backward" on peut exprimer T1_6h_R2 par : T1_3h_R2, T1_4h_R2, T1_5h_R2, T2_2h_R2, T2_5h_R2, T3_1h_R2, T3_5h_R2, T3_6h_R2\
+
+```{r}
+modelnonord <-vglm(Y ~ ., data = dfmodel, family = multinomial)
+summary(modelnonord)
+```
+
+## A Analyser ou à enlever si on ne sait pas quoi dire
+
+# FIN A AJOUTER FLORIAN 2
 
 ## Lasso
 
 ```{r, fig.height=3}
+library(plotly)
+library(ggplot2)
 lambda_seq=seq(0,1,0.001)
-x = model.matrix(T1_6h_R2~.,data=R2)
-y = data$T1_6h_R2
-fitlasso <- glmnet(x, y , alpha = 1, lambda = lambda_seq, family=c("gaussian"), intercept=F)
+x = model.matrix(T3_6h_R2~.,data=R2)
+y = T36HR2_binomial$T3_6h_R2
+fitlasso <- glmnet(x, y , alpha = 1, lambda = lambda_seq, family=c("binomial"), intercept=F)
 plot(fitlasso,label= TRUE)
 abline(v = 0.7)
+coefs <- coef(fitlasso, s="lasso")
+plot_ly(data = coefs, x = ~lambda, y = ~coef, type = 'scatter', mode = 'lines') %>%
+  layout(title = "Lasso Regression",
+         xaxis = list(title = "Lambda"),
+         yaxis = list(title = "Coefficients"))
+```
+
+```{r}
+df = data.frame(
+  lambda = rep(fitlasso$lambda, ncol(x)),
+  theta = as.vector(t(fitlasso$beta)),
+  variables = rep(colnames(x), each=length(fitlasso$lambda))
+)
+
+plt.lasso = ggplot(df, aes(x=lambda, y=theta, col=variables)) + 
+  geom_line() +
+  theme(legend.position = "bottom") + theme_minimal()
+
+ggplotly(plt.lasso)
 ```
 
 On voit que les variables les plus affectantes sont ??
+
+```{python}
+"+".join(list(datapy.columns))
+```
