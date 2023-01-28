@@ -754,16 +754,3 @@ table(reskmeans$cluster,data_quali$T3_6h_R2)
 ```{r, fig.height=3}
 
 ```
-
-```{r, fig.height=3}
-
-```
-
-```{r, fig.height=3}
-
-```
-
-
-```{r, fig.height=3}
-
-```
