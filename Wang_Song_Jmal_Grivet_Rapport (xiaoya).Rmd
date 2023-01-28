@@ -1,0 +1,768 @@
+---
+output: 
+  pdf_document :
+    toc : TRUE
+    toc_depth : 2
+    number_section : TRUE
+---
+
+---
+title: "Rapport de projet Analyse de données & Eléments de modélisation statistique"
+author: "Xiaoya Wang, Mickael Song, Yessine Jmal, Florian Grivet"
+institute : "INSA Toulouse / Enseeiht"
+date: "`r Sys.Date()`"
+bibliography: ""
+header-includes:
+   - \usepackage{dsfont}
+   - \usepackage{color}
+   - \newcommand{\1}{\mathds{1}}
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+opts_chunk$set(echo = TRUE)
+opts_knit$set(width=75)
+```
+
+\newpage
+
+# Analyse du jeu de données
+
+## Statistiques descriptives et préparation du jeu de données
+
+```{r include=FALSE}
+rm(list=ls())
+library(reticulate)
+library(ggplot2)
+library(corrplot)
+library(FactoMineR)
+library(factoextra)
+library(gridExtra)
+library(leaps)
+library(MASS)
+library(glmnet)
+```
+
+```{python include=FALSE}
+import numpy as np
+import pandas as pd 
+import matplotlib.pyplot as plt
+import plotly.express as px
+import sklearn as sk
+import seaborn as sns
+```
+
+```{r}
+# Chargement des données
+data = read.delim("Data_Etudiants_2023.txt",header=TRUE, sep=";")
+```
+
+```{python}
+datapy = pd.read_csv("Data_Etudiants_2023.txt", sep=";")
+```
+
+```{python include=FALSE}
+# Affichage des 6 premières lignes des données
+datapy.head(n=6)
+```
+
+```{r tabdata, echo=F}
+kable(head(round(data[1:8],2)),caption="\\label{tab:tabdata}Les premières lignes du jeu de données.")
+```
+
+\vspace{1em}
+
+Le jeu de données contient `r dim(data)[1]` individus et `r dim(data)[2]` variables, toutes quantitatives.\
+Les attributs du jeu de données sont : `r attributes(data)$names`
+
+\vspace{1em}
+
+```{r include=FALSE}
+print("Quelques statistiques sur les variables : ")
+print(summary(data))
+```
+
+```{python, include=FALSE}
+datapy.describe()
+```
+
+Avec le résultat de la commande `datapy.isnull().sum()`, on voit bien que notre jeu de données est complet.
+
+```{python include=FALSE}
+datapy.isnull().sum()
+```
+
+\newpage
+
+```{r}
+# Boxplot
+ggplot(stack(data), aes(x = ind, y = values))+ 
+  geom_boxplot()+ 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+On remarque que les traitements 2 et 3 ont des boxplots similaires que ça soit pour le réplicat 1 ou pour le réplicat 2. On peut faire l'hypothèse que ces deux traitements ont des résultats similaires. On remarque que ces deux traitements ne sont pas centrés donc qu'ils ont un effet non nul sur les gènes. On note également une dissymétrie pour ces traitements ainsi que de nombreux outliers et une forte variabilité entre les individus.\
+Le traitement 1 est quant à lui beaucoup plus réduit et centré en 0. Le traitement semble donc ne pas avoir d'effet sur les gènes. On remarque que le traitement 1 est symétrique mais possède également beaucoup d'outliers.
+
+```{python include=FALSE}
+fig=px.box(datapy)
+fig.show()
+```
+
+\newpage
+
+```{r}
+corrplot(cor(data), method="ellipse")
+```
+
+Sur ce graphique des corrélations on remarque que le traitement 1 réplicat 1 est fortement correlé au traitement 1 réplicat 2 mais ces derniers semblent totalement décorellés des traitements 2 et 3. On remarque également que les traitements 2 et 3 que ce soit le réplicat 1 ou 2 sont fortement corrélés.
+
+\vfill
+
+```{python include=FALSE}
+plt.figure(figsize = (40,40))
+sns.heatmap(datapy.corr(),cmap = sns.color_palette('coolwarm',as_cmap = True))
+plt.show()
+```
+
+```{r}
+# Fréquence de l'expression des gènes ("sous-exprimés", "normaux" et "sur-exprimés") en fonction des traitements
+BP = array(rep(rep(0,3),36), dim=c(3,36))
+BP[1,] = apply(data>1, 2, sum)
+BP[2,] = apply(data<=1&data>=(-1), 2, sum)
+BP[3,] = apply(data<(-1), 2, sum)
+BP = BP/nrow(data)
+barplot(BP, main="Fréquences", col=c("blue", "grey", "red"), names.arg=c(attributes(data)$names))
+legend(0,0.6, legend=c("sur-exprimé", "normal", "sous-exprimé"), title="Type de gène", box.col="grey", fill=c("blue", "grey", "red"), cex=0.65)
+```
+
+Ce graphique représente la fréquence des gènes "sous-exprimés", "normaux" et "sur-exprimés" pour chaque traitement à toute heure sur les deux réplicats. Ce graphique appuie notre hypothèse que les traitements 2 et 3 sont similaires et que le traitement 1 n'a pas beaucoup d'effet.
+
+```{python include=FALSE}
+d1 = datapy[datapy > 1].count()
+d1 = d1/len(datapy)
+d2 = datapy[(datapy<=1) & (datapy >-1)].count()
+d2 = d2/len(datapy)
+d3 = datapy[ (datapy <=-1)].count()
+d3 = d3/len(datapy)
+somme = pd.DataFrame({'d1':d1,'d2':d2,'d3':d3})
+
+fig = px.bar(somme)
+fig.show()
+```
+
+```{r}
+hist(data[,18], main="Fréquence de la valeur des gènes du traitement 3 à l'heure 6")
+```
+
+On remarque qu'à l'heure 6 (la dernière) du traitement 3, tous les gènes sont soit très sur-exprimé (valeurs $\geq 2$ ), soit très sous-exprimé (valeurs $\leq 2$). C'est comme ça que les gènes du jeu de données ont été choisi.
+
+```{python include=FALSE}
+fig = px.histogram(datapy["T3_6h_R1"])
+fig.show()
+```
+
+## Analyse en composante principale
+
+```{r include=FALSE}
+data_centree_reduite = scale(data)
+data = as.data.frame(data_centree_reduite)
+res.pca = PCA(data, ncp=15, graph=F)
+summary(res.pca)
+```
+
+```{r, fig.height=3}
+barplot(cumsum(res.pca$eig[, "percentage of variance"]), main="Percentage of variance")
+abline(h=85, col="blue")
+```
+
+```{r include=FALSE}
+cumsum(res.pca$eig[, "percentage of variance"])
+```
+
+Pour avoir 95% de l'information, on peut réduire nos données à 10 dimensions.\
+Pour avoir 99% de l'information il suffit de se placer en dimension 18.
+
+```{r, fig.height=3}
+col_trait = rep(rep(c(1,2,3), each=6),2)
+g1 = fviz_pca_ind(res.pca, label="none")
+g2 = fviz_pca_var(res.pca, col.var=col_trait) + scale_color_gradient2(low="blue", mid="black", high="red", midpoint=2)
+grid.arrange(g1,g2,ncol=2)
+```
+
+Les traitements 2 et 3 semblent avoir le même comportement et son selon l'axe 1.\
+Le traitement 1 suit l'axe 2.
+
+```{r include=FALSE}
+# Pourcentage des variables dans la construction des dimensions 1 et 2 :
+res.pca$var$cor[,1]/sum(res.pca$var$cor[,1])*100
+res.pca$var$cor[,2]/sum(res.pca$var$cor[,2])*100
+```
+
+La commande `res.pca$var$cor` nous donne la composition des axes.\
+L'axe 1 nous dit si un gène réagit au traitement 2 ou 3. Si le gène réagit fortement à l'un de ces traitements, il se retrouve sur un côté du graphique (si le gène devient très sous-exprimé ou très sur-exprimé) et s'il ne réagit pas beaucoup à l'un de ces traitement il se trouve au milieu.
+
+L'axe 2 nous dit si un gène réagit au traitement 1. Si le gène réagit fortement à ce traitement, il se retrouve en haut s'il devient sur-exprimé, en bas s'il devient sous-exprimé et s'il ne réagit pas beaucoup, il se trouve au milieu.
+
+\newpage
+
+### Analyse en composante principale sur les données transposées
+
+```{r include=FALSE}
+data_transpose = t(data)
+res.pca.transpose = PCA(data_transpose, ncp=15, graph=F)
+res.pca.transpose$eig
+summary(res.pca.transpose)
+```
+
+```{r, fig.height=3}
+barplot(cumsum(res.pca.transpose$eig[, "percentage of variance"]), main="Percentage of variance")
+abline(h=85, col="blue")
+```
+
+Pour avoir 95% de l'information, on peut réduire nos données à 13 dimensions.\
+Pour avoir 99% de l'information il suffit de se placer en dimension 21.
+
+\vspace{2em}
+
+```{r include=FALSE}
+cumsum(res.pca.transpose$eig[, "percentage of variance"])
+```
+
+```{r, fig.height=3}
+g1 = fviz_pca_var(res.pca.transpose, col.var=data$T3_6h_R2, label="none") + scale_color_gradient2(low="blue", mid="black", high="red", midpoint=0)
+g2 = fviz_pca_ind(res.pca.transpose, axes=c(1, 2), autoLab="yes", col.ind=col_trait) + scale_color_gradient2(low="blue", mid="black", high="red", midpoint=2)
+grid.arrange(g1,g2,ncol=2)
+```
+
+Commentaires à faire
+
+\newpage
+
+# Modèle linéaire
+
+## Etude de l'expression des gènes pour le traitement T3 à 6h
+
+On récupère les valeurs du traitement T3 à 6h grâce aux commandes suivantes :
+
+```{r}
+T3 = data[grep("T3", names(data), value=TRUE)]
+T3R2 = T3[grep("R2", names(T3), value=TRUE)]
+```
+
+```{r include=FALSE}
+reg.mul <- lm(T3_6h_R2 ~ ., data = T3R2)
+summary(reg.mul)
+```
+
+```{r, fig.height=3.5}
+choix=regsubsets(T3_6h_R2~., data = T3R2, nbest = 1, nvmax = 5, method = "backward")
+plot(choix,scale = "bic")
+```
+
+```{r include=FALSE}
+choix=regsubsets(T3_6h_R2~., data = T3R2, nbest = 1, nvmax = 5, method = "forward")
+plot(choix,scale = "bic")
+choix=regsubsets(T3_6h_R2~., data = T3R2, nbest = 1, nvmax = 5, method = "backward")
+plot(choix,scale = "adjr2")
+choix=regsubsets(T3_6h_R2~., data = T3R2, nbest = 1, nvmax = 5, method = "forward")
+plot(choix,scale = "adjr2")
+choix=regsubsets(T3_6h_R2~., data = T3R2, nbest = 1, nvmax = 5, method = "backward")
+plot(choix,scale = "Cp")
+choix=regsubsets(T3_6h_R2~., data = T3R2, nbest = 1, nvmax = 5, method = "forward")
+plot(choix,scale = "Cp")
+```
+
+On a réalisé notre sélection de variables avec tous les critères (BIC, adjr2, Cp) et avec les méthodes forward et backward. Nous avons eu les mêmes résultats :
+
+On garde toutes les variables mais on observe quand même une gradation. Le temps précédent (5h) est le plus influent suivi du temps de démarrage (1h, 2h). On peut faire l'hypothèse d'une périodicité de temps sur l'influence des traitements sur les gènes. Il faudrait avoir tester sur plus d'heures pour valider ou non cette hypothèse.
+
+### Etude sur tous les traitements et tous les temps
+
+```{r}
+R2 = data[grep("R2", names(data), value = TRUE)]
+```
+
+```{r include=FALSE}
+reg.mul_complet <- lm(T3_6h_R2 ~ ., data = R2)
+summary(reg.mul_complet)
+```
+
+```{r, fig.height=3.5}
+choix=regsubsets(T3_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "backward")
+plot(choix,scale = "bic")
+```
+
+```{r include=FALSE}
+choix=regsubsets(T3_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "forward")
+plot(choix,scale = "bic")
+choix=regsubsets(T3_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "backward")
+plot(choix,scale = "Cp")
+choix=regsubsets(T3_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "forward")
+plot(choix,scale = "Cp")
+choix=regsubsets(T3_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "backward")
+plot(choix,scale = "adjr2")
+choix=regsubsets(T3_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "forward")
+plot(choix,scale = "adjr2")
+```
+
+Critère bic, méthode backward/forward: T1: 1h, 3h, 5h, 6h T2: 1h, 3h, 5h, 6h T3: 5h
+
+ça correspond à l'analyse descriptive précedente, les gènes qui ont eu le traitement T2 ou le traitemet T3 ont des comportements similaires. Cela est cohérent avec le fait que T2 est plus influent sur T3 que T1 sur T3.
+
+On retrouve par ailleurs les résultats de l'analyse précédente puisque les heures les plus influentes sont les heures les plus proches.
+
+On cherche à valider ce sous-modèle en comparant avec le modèle de départ:
+
+```{r}
+mod.debut = lm(T3_6h_R2 ~ ., data = R2)
+mod.fin = lm(T3_6h_R2 ~ T1_1h_R2+T1_3h_R2+T1_5h_R2+T1_6h_R2+T2_1h_R2+T2_3h_R2+T2_5h_R2+T2_6h_R2+T3_5h_R2, data = R2)
+anova(mod.fin,mod.debut)
+```
+
+p-valeur = 0.2798 \> 0.05, on ne rejette pas H0 au risque de 5%, on accepte le sous_modèle.
+
+## Lasso
+
+```{r, fig.height=3}
+lambda_seq=seq(0,1,0.001)
+tildeX = as.matrix(R2[,-18])
+tildeY = data$T3_6h_R2
+
+fitlasso <- glmnet(tildeX, tildeY, alpha = 1, label = lambda_seq, family=c("gaussian"), intercept=F)
+
+df=data.frame(tau = rep(-log(fitlasso$lambda), ncol(tildeX)), theta=as.vector(t(fitlasso$beta)), variable=rep(colnames(tildeX), each=length(fitlasso$lambda)))
+g1 = ggplot(df,aes(x=tau,y=theta,col=variable))+geom_line()+ylab("Estimator of theta")+xlab("-log(lambda)")+theme(legend.title = element_text(size = 5),legend.text = element_text(size = 3))
+g1
+```
+
+```{r, fig.height=3}
+tildeX = as.matrix(R2[,-18])
+tildeY = data$T3_6h_R2
+fitlasso <- glmnet(tildeX, tildeY, alpha = 1, family=c("gaussian"), intercept=F)
+plot_glmnet(fitlasso,label = 8)
+```
+
+On voit que les variables les plus affectantes sont: 
+-T1: 1h, 3h, 5h 
+-T2: 3h, 4h, 5h, 6h 
+-T3: 5h
+
+```{r, fig.height=3}
+#lasso_cv <- cv.glmnet(tildeX, tildeY, alpha = 1, nfolds=10, label = lambda_seq, type.measure=c("mse"), intercept=F)
+#best_lambda <-lasso_cv$lambda.min # red
+#best_lambda.1se <- lasso_cv$lambda.1se # black
+```
+
+
+\newpage
+
+## Etude de l'expression des gènes pour le traitement T1 à 6h :
+
+```{r}
+T1 = data[grep("T1", names(data), value=TRUE)]
+T1R2 = T1[grep("R2", names(T1), value=TRUE)]
+```
+
+```{r include=FALSE}
+reg.mul2 <- lm(T1_6h_R2 ~ ., data = T1R2)
+summary(reg.mul2)
+```
+
+```{r, fig.height=3.5}
+choix=regsubsets(T1_6h_R2~., data = T1R2, nbest = 1, nvmax = 5, method = "backward")
+plot(choix,scale = "bic")
+```
+
+```{r include=FALSE}
+choix=regsubsets(T1_6h_R2~., data = T1R2, nbest = 1, nvmax = 5, method = "backward")
+plot(choix,scale = "bic")
+choix=regsubsets(T1_6h_R2~., data = T1R2, nbest = 1, nvmax = 5, method = "forward")
+plot(choix,scale = "bic")
+choix=regsubsets(T1_6h_R2~., data = T1R2, nbest = 1, nvmax = 5, method = "forward")
+plot(choix,scale = "Cp")
+choix=regsubsets(T1_6h_R2~., data = T1R2, nbest = 1, nvmax = 5, method = "forward")
+plot(choix,scale = "Cp")
+choix=regsubsets(T1_6h_R2~., data = T1R2, nbest = 1, nvmax = 5, method = "forward")
+plot(choix,scale = "adjr2")
+choix=regsubsets(T1_6h_R2~., data = T1R2, nbest = 1, nvmax = 5, method = "forward")
+plot(choix,scale = "adjr2")
+```
+
+```{r}
+mod.debut = lm(T1_6h_R2 ~ ., data = T1R2)
+mod.fin = lm(T1_6h_R2 ~ T1_2h_R2+T1_3h_R2+T1_4h_R2+T1_5h_R2, data = T1R2)
+anova(mod.fin,mod.debut)
+```
+
+p-valeur = 0.5687 \> 0.05, on ne rejette pas H0 au risque de 5%, on valide le sous-modèle.
+
+On étudie sur tous les traitements et tous les temps:
+
+```{r include=FALSE}
+reg.mul_complet <- lm(T1_6h_R2 ~ ., data = R2)
+summary(reg.mul_complet)
+```
+
+```{r, fig.height=3.5}
+choix=regsubsets(T1_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "backward")
+plot(choix,scale = "bic")
+```
+
+```{r include=FALSE}
+choix=regsubsets(T1_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "forward")
+plot(choix,scale = "bic")
+choix=regsubsets(T1_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "backward")
+plot(choix,scale = "Cp")
+choix=regsubsets(T1_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "forward")
+plot(choix,scale = "Cp")
+choix=regsubsets(T1_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "backward")
+plot(choix,scale = "adjr2")
+choix=regsubsets(T1_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "forward")
+plot(choix,scale = "adjr2")
+```
+
+On choisit le sous-modèle avec la criètre bic et méthode backward, on cherche à le valider:
+
+```{r}
+mod.debut = lm(T1_6h_R2 ~ ., data = R2)
+mod.fin = lm(T1_6h_R2 ~ T1_1h_R2+T1_2h_R2+T1_3h_R2+T1_4h_R2+T1_5h_R2+
+               T2_1h_R2+T2_2h_R2+T2_3h_R2+T2_6h_R2+
+             T3_1h_R2+T3_5h_R2+T3_6h_R2, data = R2)
+anova(mod.fin,mod.debut)
+```
+
+p-valeur = 0.09 \> 0.05, on ne rejette pas H0 au risque de 5%, on accepte le sous-modèle.
+
+On voit que l'expression des gènes à 6h pour le traitement T1 est affecté par - les heures finales (3h, 4h, 5h) du traitement T1 - les heures débutantes (1h, 2h, 3h) et finale(6h) du traitements T2 - les heures débutantes (1h) et finales (5h, 6h) du traitement T3
+
+## Lasso
+
+```{r, fig.height=3}
+lambda_seq=seq(0,1,0.001)
+tildeX = as.matrix(R2[,-6])
+tildeY = data$T1_6h_R2
+
+fitlasso <- glmnet(tildeX, tildeY, alpha = 1, label = lambda_seq, family=c("gaussian"), intercept=F)
+
+df=data.frame(tau = rep(-log(fitlasso$lambda), ncol(tildeX)), theta=as.vector(t(fitlasso$beta)), variable=rep(colnames(tildeX), each=length(fitlasso$lambda)))
+g1 = ggplot(df,aes(x=tau,y=theta,col=variable))+geom_line()+ylab("Estimator of theta")+xlab("-log(lambda)")+theme(legend.title = element_text(size = 5),legend.text = element_text(size = 3))
+g1
+```
+```{r, fig.height=3}
+tildeX = as.matrix(R2[,-6])
+tildeY = data$T1_6h_R2
+fitlasso <- glmnet(tildeX, tildeY, alpha = 1, family=c("gaussian"), intercept=F)
+plot_glmnet(fitlasso,label = 8)
+```
+On voit que les variables les plus affectantes sont:
+T1: 3h, 5h
+T2: 2h, 3h, 5h, 6h
+T3: 5h, 6h
+
+### Obtention d’une classification des variables ”Tx_xh_Rx”
+
+On fait l'ACP sur les données transposées pour avoir une classification des variables:
+```{r}
+data = read.delim("Data_Etudiants_2023.txt",header=TRUE, sep=";")
+res.pca.transpose = PCA(t(data), scale.unit = TRUE, ncp=15, graph=F)
+res.pca.transpose$eig[1:5,3]
+coord = (res.pca.transpose$ind$coord)[,1:3] # on prend les premières 3 composantes principales qui résument 90% d'information
+```
+
+L’évolution de l’inertie intraclasse en fonction du nombre de classes:
+
+```{r, fig.height=3}
+Kmax<-10
+reskmeanscl<-matrix(0,nrow=nrow(coord),ncol=Kmax-1)
+Iintra<-NULL
+for (k in 2:Kmax){
+  resaux<-kmeans(coord, k, nstart = 10)
+  # l'inertie intra-class augmente à cause de la instabilité de k-means, solution: refaire plusieurs fois de calcule avec option nstart
+  reskmeanscl[,k-1]<-resaux$cluster
+  Iintra<-c(Iintra,resaux$tot.withinss)
+}
+
+df<-data.frame(K=2:Kmax,Iintra=Iintra)
+ggplot(df,aes(x=K,y=Iintra))+geom_line()+geom_point()+xlab("Nombre de classes")+ylab("Inertie intraclasse")
+```
+
+## k-means
+
+Nb de classe en utilisant le critère silhouette:
+```{r, eval=F}
+library(cluster)
+Silhou<-NULL
+for (k in 2:Kmax){
+   aux<-silhouette(reskmeanscl[,k-1],daisy(coord))
+   Silhou<-c(Silhou,mean(aux[,3]))
+}
+df<-data.frame(K=2:Kmax,Silhouette=Silhou)
+ggplot(df,aes(x=K,y=Silhouette))+
+  geom_point()+
+  geom_line()+theme(legend.position = "bottom")
+```
+on choisit 2 classes selon le graphe, on représente sur les axes de l'ACP:
+
+```{r, fig.height=3}
+km = kmeans(coord,centers = 2)
+fviz_cluster(km,data=coord,axes = c(1,2), ellipse.type="norm",labelsize=8,geom=c("point","text"))+ggtitle("")
+```
+Cluster 1 regroupe traitement T2/T3 du répicat R1/R2 de 2h à 6h, cluster 2 regroupe traitement T1 du réplicat R1/R2 de 1h à 6h et toutes les 1h. 
+
+On retrouve les mêmes informations qu'avant: le traitement T2 et T3 réagissent de façon similaire. Comme T3 est une combinaison des traitements T1 et T2, on peut dire que c'est T2 qui domine les effets du traitement T3. Cependant, 
+
+
+```{r, fig.height=3}
+aux<-silhouette(km$cluster, daisy(coord))
+fviz_silhouette(aux)+theme(plot.title = element_text(size =9))
+```
+# PAM
+le nombre de classes optimal par le critère Silhouette pour K variant entre 2 et 15 avec l’algorithme PAM
+```{r, fig.height=3}
+Kmax<-10
+resPAMcl<-matrix(0,nrow=nrow(coord),ncol=Kmax-1)
+Silhou<-NULL
+for (k in 2:Kmax){
+  resaux<-pam(coord,k,metric="euclidean")
+  resPAMcl[,k-1]<-resaux$clustering
+  aux<-silhouette(resPAMcl[,k-1], daisy(coord))
+  Silhou<-c(Silhou,mean(aux[,3]))
+}
+
+df<-data.frame(K=2:Kmax,Silhouette=Silhou)
+ggplot(df,aes(x=K,y=Silhouette))+
+  geom_point()+
+  geom_line()+theme(legend.position = "bottom")
+```
+même résultat: 2 class
+
+```{r, fig.height=3}
+table(km$cluster,resPAM$clustering) # même pour kmeans et PAM
+```
+## CAH:
+```{r, fig.height=3}
+d = dist(coord)
+hclustsingle<-hclust(d, method = "single") # la distance euclidienne entre les points
+hclustcomplete<-hclust(d, method = "complete")
+hclustaverage<-hclust(d, method = "average")
+```
+
+```{r, fig.height=3}
+Kmax <- 20
+resward <- hclust(dist(coord, method = "euclidean"), method = "ward.D2")
+df <- data.frame(K = 1:Kmax, height = sort(resward$height, decreasing = T)[1:Kmax])
+ggplot(df, aes(x = K, y = height)) + geom_line() + geom_point()
+```
+3 ou 4 classes ?
+
+Si on prend 3 classes avec méthode complete:
+```{r, fig.height=3}
+library(reshape)
+ClassK3 = cutree(hclustcomplete,k=3)
+df<-data.frame(coord,Class=as.factor(ClassK3))
+df<-melt(df,id="Class")
+ggplot(df,aes(x=variable,y=value))+geom_violin(aes(fill=Class))
+```
+
+détermine le nombre de classe avec critère CH: ne marche pas ?
+```{r, fig.height=3}
+library(clusterSim)
+hward<-hclust(d, method = "ward.D2")
+
+CH <- NULL
+Kmax <- 20
+for (k in 2:Kmax) {
+    CH <- c(CH, index.G1(coord, cutree(resward, k))) 
+    }
+daux <- data.frame(NbClust = 2:Kmax, CH = CH)
+ggplot(daux, aes(x = NbClust, y = CH)) + geom_line() + geom_point()
+```
+
+## Modèle mélange avec BIC:
+```{r, fig.height=3}
+library(mclust)
+resBICdiag <- Mclust(coord, G = 2:10)
+fviz_mclust(resBICdiag, what = "BIC")
+```
+
+```{r, fig.height=3}
+resBIC <- Mclust(coord, G = 3, modelNames = "EEV")
+Aux <- data.frame(label = paste("Cl", resBIC$classification, sep = ""), proba = apply(resBICdiag$z,1, max))
+h1 <- ggplot(Aux, aes(x = label, y = proba)) + geom_boxplot()
+h2 <- fviz_cluster(resBIC, data = Data, ellipse.type = "norm", geom = "point") +
+    ggtitle("") + theme(legend.position = "none")
+grid.arrange(h1, h2, ncol = 2)
+```
+Modèle mélange avec ICL:
+```{r, fig.height=3}
+resICL <- mclustICL(coord, G = 2:10)
+summary(resICL)
+```
+
+```{r, fig.height=3}
+resICL <- Mclust(coord, G = 3, modelNames = "EEV")
+Aux <- data.frame(label = paste("Cl", resICL$classification, sep = ""), proba = apply(resICL$z,
+    1, max))
+h1 <- ggplot(Aux, aes(x = label, y = proba)) + geom_boxplot()
+h2 <- fviz_cluster(resICL, data = Data, ellipse.type = "norm", geom = "point") +
+    ggtitle("") + theme(legend.position = "none")
+grid.arrange(h1, h2, ncol = 2)
+```
+3 classes: CAH, modèle de mélange BIC et ICL donnent le même résultat:
+```{r, fig.height=3}
+table(resBIC$classification,resICL$classification)
+table(resBIC$classification,ClassK3)              
+```
+
+Comparaison 2 classes et 3 classes:
+```{r, fig.height=3}
+table(km$cluster,ClassK3)
+```
+
+```{r, fig.height=3}
+
+```
+
+```{r, fig.height=3}
+
+```
+
+### Obtention d’une classification des gènes ayant des profils d’expression similaires (co-exprimés) dans les différentes conditions
+
+On fait avec data non transpoé
+
+```{r, fig.height=3}
+res.pca = PCA(data, ncp=15, graph=F)
+coord2 = (res.pca$ind$coord)[,1:5] # 85% d'inertie
+```
+
+```{r, fig.height=3}
+fviz_nbclust(coord, FUNcluster = kmeans, method = "silhouette")
+fviz_nbclust(coord, FUNcluster = kmeans, method = "gap_stat")
+fviz_nbclust(coord, FUNcluster = cluster::pam, method = "silhouette")
+```
+
+# k-means
+```{r, fig.height=3}
+set.seed(12345)
+Kmax <- 20
+reskmeans <- matrix(0, nrow = nrow(coord2), ncol = (Kmax - 1))
+Iintra <- NULL
+Silhou <- NULL
+for (k in 2:Kmax) {
+    resaux <- kmeans(coord2, k, nstart = 20, iter.max = 30)
+    reskmeans[, (k - 1)] <- resaux$cluster
+    Iintra <- c(Iintra, resaux$tot.withinss)
+    aux <- silhouette(resaux$cluster, daisy(coord2))
+    Silhou <- c(Silhou, mean(aux[, 3]))
+}
+
+rm(resaux, aux)
+
+df <- data.frame(K = 2:Kmax, Iintra = Iintra, Silhou = Silhou)
+g1 <- ggplot(df, aes(x = K, y = Iintra)) + geom_line() + geom_point() + xlab("Nombre de classes") +
+    ylab("Inertie intraclasse")
+g2 <- ggplot(df, aes(x = K, y = Silhou)) + geom_line() + geom_point() + xlab("Nombre de classes") +
+    ylab("Critère Silhouette")
+grid.arrange(g1, g2, ncol = 2)
+```
+2 class
+
+```{r, fig.height=3}
+reskmeans = kmeans(coord2,2)
+fviz_cluster(reskmeans,data=coord2,ellipse.type="norm",labelsize=8,geom=c("point"))+ggtitle("")
+```
+
+```{r, fig.height=3}
+fviz_pca_ind(res.pca, axes = c(1, 2), geom = c("point"), habillage = as.factor(reskmeans$cluster))
+```
+
+## CAH
+```{r, fig.height=3}
+Kmax <- 20
+resward <- hclust(dist(coord2, method = "euclidean"), method = "ward.D2")
+df <- data.frame(K = 1:Kmax, height = sort(resward$height, decreasing = T)[1:Kmax])
+ggplot(df, aes(x = K, y = height)) + geom_line() + geom_point()
+```
+3 ou 4 class
+
+critère CH:
+```{r, fig.height=3}
+CH <- NULL
+Kmax <- 20
+for (k in 2:Kmax) {
+    CH <- c(CH, index.G1(coord2, cutree(resward, k)))
+}
+daux <- data.frame(NbClust = 2:Kmax, CH = CH)
+ggplot(daux, aes(x = NbClust, y = CH)) + geom_line() + geom_point()
+```
+2 class
+
+Visualization avec 2 classes:
+```{r, fig.height=3}
+d = dist(coord2)
+hclustcomplete<-hclust(d, method = "complete")
+hclustaverage<-hclust(d, method = "average")
+
+ClassK2 = cutree(hclustcomplete,k=2)
+df<-data.frame(coord2,Class=as.factor(ClassK2))
+df<-melt(df,id="Class")
+ggplot(df,aes(x=variable,y=value))+geom_violin(aes(fill=Class))
+```
+
+## Modèle mélange avec BIC: ??
+```{r, fig.height=3}
+resBICdiag <- Mclust(coord2, G = 2:10)
+fviz_mclust(resBICdiag, what = "BIC")
+```
+
+Modèle mélange avec ICL: ??
+```{r, fig.height=3}
+resICL <- mclustICL(coord2, G = 2:10)
+summary(resICL)
+```
+
+```{r, fig.height=3}
+modICL <- Mclust(coord2, G = 5, modelNames = "VVV")
+Aux <- data.frame(label = paste("Cl", modICL$classification, sep = ""), proba = apply(modICL$z,
+    1, max))
+ggplot(Aux, aes(x = label, y = proba)) + geom_boxplot()
+```
+
+```{r, fig.height=3}
+df <- data.frame(coord2, Class = as.factor(modICL$classification))
+df <- melt(df, id = "Class")
+ggplot(df, aes(x = variable, y = value)) + geom_violin(aes(fill = Class))
+```
+
+Transformation en data qualitative avec modalités -1, 0 et 1:
+```{r, fig.height=3}
+data = read.delim("Data_Etudiants_2023.txt",header=TRUE, sep=";")
+data_quali = data
+data_quali[data_quali > 1] = 1
+data_quali[data_quali < -1] = -1
+data_quali[data_quali > -1 & data_quali < 1] = 0
+```
+
+D'après analyse descriptive précedante, on sait que T3_6h_R2 possède que des gènes sur-exprimé et sous-exprimé, donc en comparant avec T3_6h_R2, on en déduit que les deux cluters qu'on a obtenu sépare les profils d’expression non-similaires (sur et sous-exprimé), qui veut dire regroupe les profils co-exprimés:
+```{r, fig.height=3}
+table(reskmeans$cluster,data_quali$T3_6h_R2)
+```
+
+```{r, fig.height=3}
+
+```
+
+```{r, fig.height=3}
+
+```
+
+```{r, fig.height=3}
+
+```
+
+
+```{r, fig.height=3}
+
+```
