@@ -489,7 +489,7 @@ ggplot(df,aes(x=K,y=Iintra))+geom_line()+geom_point()+xlab("Nombre de classes")+
 
 ## k-means
 
-Nb de classe en utilisant le critère silhouette:
+On choisit le nombre de classe en utilisant le critère silhouette:
 ```{r, eval=F}
 library(cluster)
 Silhou<-NULL
@@ -502,23 +502,25 @@ ggplot(df,aes(x=K,y=Silhouette))+
   geom_point()+
   geom_line()+theme(legend.position = "bottom")
 ```
-on choisit 2 classes selon le graphe, on représente sur les axes de l'ACP:
+on retirnt 2 classes selon le graphe, on représente sur les 2 axes de l'ACP:
 
 ```{r, fig.height=3}
 km = kmeans(coord,centers = 2)
 fviz_cluster(km,data=coord,axes = c(1,2), ellipse.type="norm",labelsize=8,geom=c("point","text"))+ggtitle("")
 ```
-Cluster 1 regroupe traitement T2/T3 du répicat R1/R2 de 2h à 6h, cluster 2 regroupe traitement T1 du réplicat R1/R2 de 1h à 6h et toutes les 1h. 
+Cluster 1 regroupe traitement T2/T3 du répicat R1/R2 de 2h à 6h, cluster 2 regroupe traitement T2/T3 du répicat R1/R2 à 1h et traitement T1 du réplicat R1/R2 de 1h à 6h.
 
-On retrouve les mêmes informations qu'avant: le traitement T2 et T3 réagissent de façon similaire. Comme T3 est une combinaison des traitements T1 et T2, on peut dire que c'est T2 qui domine les effets du traitement T3. Cependant, 
+On retrouve les mêmes informations qu'avant: le traitement T2 et T3 réagissent de façon similaire. Comme T3 est une combinaison des traitements T1 et T2, on peut dire que c'est T2 qui domine les effets du traitement T3. 
 
+Cependant, à l'heure débutante (1h), les traitements T2/T3 ont le même effet que T1 sur les gènes, on peut supposer que l'effet du traitement T2/T3 se déroule graduellement donc n'a pas encore manifesté à 1h.
 
+Les partitions des deux clusters sont plutôt homogènes:
 ```{r, fig.height=3}
 aux<-silhouette(km$cluster, daisy(coord))
 fviz_silhouette(aux)+theme(plot.title = element_text(size =9))
 ```
 # PAM
-le nombre de classes optimal par le critère Silhouette pour K variant entre 2 et 15 avec l’algorithme PAM
+On visualise le nombre de classes optimal par le critère Silhouette avec l’algorithme PAM:
 ```{r, fig.height=3}
 Kmax<-10
 resPAMcl<-matrix(0,nrow=nrow(coord),ncol=Kmax-1)
@@ -535,49 +537,66 @@ ggplot(df,aes(x=K,y=Silhouette))+
   geom_point()+
   geom_line()+theme(legend.position = "bottom")
 ```
-même résultat: 2 class
+On obtient le même résultat: 2 classes, et ils sont identiques qu'avec k-means:
 
 ```{r, fig.height=3}
 resPAM <- pam(coord, 2, metric = "euclidean")
-table(km$cluster,resPAM$clustering) # même pour kmeans et PAM
+table(km$cluster,resPAM$clustering)
 ```
-## CAH:
+
+## Classification hiérarchique
+
+Les 4 classifications hiérarchiques:
 ```{r, fig.height=3}
 d = dist(coord)
 hclustsingle<-hclust(d, method = "single") # la distance euclidienne entre les points
 hclustcomplete<-hclust(d, method = "complete")
 hclustaverage<-hclust(d, method = "average")
+hward<-hclust(d,method="ward.D2")
 ```
 
+On visualise l'hauteur du dendogramme avec la mésure d'agrégation de Ward:
 ```{r, fig.height=3}
 Kmax <- 20
-resward <- hclust(dist(coord, method = "euclidean"), method = "ward.D2")
-df <- data.frame(K = 1:Kmax, height = sort(resward$height, decreasing = T)[1:Kmax])
+df <- data.frame(K = 1:Kmax, height = sort(hclustaverage$height, decreasing = T)[1:Kmax])
 ggplot(df, aes(x = K, y = height)) + geom_line() + geom_point()
 ```
-3 ou 4 classes ?
+Selon l'hauteur du dendogramme, on voitqu'il y a une saute en k = 3 ou 6 et puis la courbe s'aplanit, on retient donc 3 ou 6 classes.
 
-Si on prend 3 classes avec méthode complete:
-```{r, fig.height=3}
-library(reshape)
-ClassK3 = cutree(hclustcomplete,k=3)
-df<-data.frame(coord,Class=as.factor(ClassK3))
-df<-melt(df,id="Class")
-ggplot(df,aes(x=variable,y=value))+geom_violin(aes(fill=Class))
-```
-
-détermine le nombre de classe avec critère CH: ne marche pas ?
+On détermine le nombre de classes à retenir avec l’indice de Calinski_Harabasz: ne marche pas ?
 ```{r, fig.height=3}
 library(clusterSim)
-hward<-hclust(d, method = "ward.D2")
 
 CH <- NULL
 Kmax <- 20
 for (k in 2:Kmax) {
-    CH <- c(CH, index.G1(coord, cutree(resward, k))) 
+    CH <- c(CH, index.G1(coord, cutree(hward, k))) 
     }
 daux <- data.frame(NbClust = 2:Kmax, CH = CH)
 ggplot(daux, aes(x = NbClust, y = CH)) + geom_line() + geom_point()
+```
+On voit que plus k est grand, plus indice Calinski-Harabasz augemente, il n'y apas de pic sur la courbe, donc on peut pas déterminer une classification avec le critère Calinski-Harabasz.
+
+On essaie le critère silhouette:
+```{r, fig.height=3}
+Silhou<-NULL
+Kmax<-20
+for (k in 2:Kmax){
+  Silhou<-c(Silhou,index.S(d,cutree(hward,k)))
+}
+daux<-data.frame(NbClust=2:Kmax,Silhouette=Silhou)
+ggplot(daux,aes(x=NbClust,y=Silhouette))+geom_line()+geom_point()
+```
+2 classes avec silhouette
+
+On trace la distribution des variables en fonction de la classification en 3 classes avec la mésure d'agrégation Ward: 
+## à commenter
+```{r, fig.height=3}
+library(reshape)
+ClassK3 = cutree(hward,k=3)
+df<-data.frame(coord,Class=as.factor(ClassK3))
+df<-melt(df,id="Class")
+ggplot(df,aes(x=variable,y=value))+geom_violin(aes(fill=Class))
 ```
 
 ## Modèle mélange avec BIC:
@@ -586,23 +605,24 @@ library(mclust)
 resBICdiag <- Mclust(coord, G = 2:10)
 fviz_mclust(resBICdiag, what = "BIC")
 ```
-
-```{r, fig.height=3}
-resBIC <- Mclust(coord, G = 3, modelNames = "EEV")
-Aux <- data.frame(label = paste("Cl", resBIC$classification, sep = ""), proba = apply(resBICdiag$z,1, max))
-h1 <- ggplot(Aux, aes(x = label, y = proba)) + geom_boxplot()
-h2 <- fviz_cluster(resBIC, data = Data, ellipse.type = "norm", geom = "point") +
-    ggtitle("") + theme(legend.position = "none")
-grid.arrange(h1, h2, ncol = 2)
-```
 Modèle mélange avec ICL:
 ```{r, fig.height=3}
 resICL <- mclustICL(coord, G = 2:10)
 summary(resICL)
 ```
 
+Si on retient 3 classes: CAH, modèle de mélange BIC et ICL donnent le même résultat de classification selon ARI = 1:
 ```{r, fig.height=3}
+resBIC <- Mclust(coord, G = 3, modelNames = "EEV")
 resICL <- Mclust(coord, G = 3, modelNames = "EEV")
+
+adjustedRandIndex(resBIC$classification,resICL$classification)
+adjustedRandIndex(resBIC$classification,ClassK3)
+```
+
+On visualise les 3 clusters en boxplot des probabilité d'appartenance et dans le plan de l'ACP:
+## à commenter
+```{r, fig.height=3}
 Aux <- data.frame(label = paste("Cl", resICL$classification, sep = ""), proba = apply(resICL$z,
     1, max))
 h1 <- ggplot(Aux, aes(x = label, y = proba)) + geom_boxplot()
@@ -610,16 +630,17 @@ h2 <- fviz_cluster(resICL, data = Data, ellipse.type = "norm", geom = "point") +
     ggtitle("") + theme(legend.position = "none")
 grid.arrange(h1, h2, ncol = 2)
 ```
-3 classes: CAH, modèle de mélange BIC et ICL donnent le même résultat:
-```{r, fig.height=3}
-table(resBIC$classification,resICL$classification)
-table(resBIC$classification,ClassK3)              
-```
 
-Comparaison 2 classes et 3 classes:
+On compare les deux classifications: k = 2 avec kmeans et k=3 avec CAH ward:
 ```{r, fig.height=3}
-table(km$cluster,ClassK3)
+library(circlize)
+clust1<-paste("Kmeans-",km$cluster,sep="")
+clust2<-paste("CAH3-",cutree(hward,3),sep="")
+table(clust1,clust2)
+chordDiagram(table(clust1,clust2))
 ```
+On voit que le cluster 1 de k-means égale à cluster 2 et 3 de CAH, qui représente 2h et 3h du traitement T2/T3 du réplicat R1/R2. Les gènes du traitemetns T2/T3 dans les heures aux milieux(2h, 3h) ont donc des comportements différents que l'heure débutante(1h) et heures finales(5h,6h), ce qui correspond à l'analyse précédante. 
+## analyse à compléter
 
 ```{r, fig.height=3}
 
@@ -631,17 +652,18 @@ table(km$cluster,ClassK3)
 
 ### Obtention d’une classification des gènes ayant des profils d’expression similaires (co-exprimés) dans les différentes conditions
 
-On fait avec data non transpoé
+On travaille avec le data non transposé pour la calassification des gènes:
 
 ```{r, fig.height=3}
-res.pca = PCA(data, ncp=15, graph=F)
-coord2 = (res.pca$ind$coord)[,1:5] # 85% d'inertie
+res.pca = PCA(data, ncp=15, scale.unit = TRUE, graph=F)
+res.pca$eig[1:7,3]
+coord2 = (res.pca$ind$coord)[,1:7] # 90% d'inertie
 ```
 
 ```{r, fig.height=3}
-fviz_nbclust(coord, FUNcluster = kmeans, method = "silhouette")
-fviz_nbclust(coord, FUNcluster = kmeans, method = "gap_stat")
-fviz_nbclust(coord, FUNcluster = cluster::pam, method = "silhouette")
+fviz_nbclust(coord2, FUNcluster = kmeans, method = "silhouette")
+fviz_nbclust(coord2, FUNcluster = kmeans, method = "gap_stat")
+fviz_nbclust(coord2, FUNcluster = cluster::pam, method = "silhouette")
 ```
 
 # k-means
@@ -652,7 +674,7 @@ reskmeans <- matrix(0, nrow = nrow(coord2), ncol = (Kmax - 1))
 Iintra <- NULL
 Silhou <- NULL
 for (k in 2:Kmax) {
-    resaux <- kmeans(coord2, k, nstart = 20, iter.max = 30)
+    resaux <- kmeans(coord2, k, nstart = 10, iter.max = 30)
     reskmeans[, (k - 1)] <- resaux$cluster
     Iintra <- c(Iintra, resaux$tot.withinss)
     aux <- silhouette(resaux$cluster, daisy(coord2))
@@ -668,27 +690,27 @@ g2 <- ggplot(df, aes(x = K, y = Silhou)) + geom_line() + geom_point() + xlab("No
     ylab("Critère Silhouette")
 grid.arrange(g1, g2, ncol = 2)
 ```
-2 class
 
+On retient 2 classes avec k-means, on visualise la classification obtenue sur le plan de l'ACP:
 ```{r, fig.height=3}
 reskmeans = kmeans(coord2,2)
 fviz_cluster(reskmeans,data=coord2,ellipse.type="norm",labelsize=8,geom=c("point"))+ggtitle("")
-```
-
-```{r, fig.height=3}
 fviz_pca_ind(res.pca, axes = c(1, 2), geom = c("point"), habillage = as.factor(reskmeans$cluster))
 ```
+L'axe 1 de l'ACP sépare bien les deux clusters.
 
-## CAH
+## CAH 
+
+avec la mesure d'agrégation Ward
 ```{r, fig.height=3}
 Kmax <- 20
 resward <- hclust(dist(coord2, method = "euclidean"), method = "ward.D2")
 df <- data.frame(K = 1:Kmax, height = sort(resward$height, decreasing = T)[1:Kmax])
 ggplot(df, aes(x = K, y = height)) + geom_line() + geom_point()
 ```
-3 ou 4 class
+2 ou 3 class
 
-critère CH:
+coupure avec la critère CH:
 ```{r, fig.height=3}
 CH <- NULL
 Kmax <- 20
@@ -702,15 +724,13 @@ ggplot(daux, aes(x = NbClust, y = CH)) + geom_line() + geom_point()
 
 Visualization avec 2 classes:
 ```{r, fig.height=3}
-d = dist(coord2)
-hclustcomplete<-hclust(d, method = "complete")
-hclustaverage<-hclust(d, method = "average")
-
-ClassK2 = cutree(hclustcomplete,k=2)
+ClassK2 = cutree(resward,k=2)
 df<-data.frame(coord2,Class=as.factor(ClassK2))
 df<-melt(df,id="Class")
 ggplot(df,aes(x=variable,y=value))+geom_violin(aes(fill=Class))
 ```
+## à commenter
+
 
 ## Modèle mélange avec BIC: ??
 ```{r, fig.height=3}
@@ -725,11 +745,12 @@ summary(resICL)
 ```
 
 ```{r, fig.height=3}
-modICL <- Mclust(coord2, G = 5, modelNames = "VVV")
+modICL <- Mclust(coord2, G = 6, modelNames = "VVV")
 Aux <- data.frame(label = paste("Cl", modICL$classification, sep = ""), proba = apply(modICL$z,
     1, max))
 ggplot(Aux, aes(x = label, y = proba)) + geom_boxplot()
 ```
+La classification n'a pas été bien faite, il y a beaucoup de outliers avec probabilité d'appartenance jusqu'à 50%.
 
 ```{r, fig.height=3}
 df <- data.frame(coord2, Class = as.factor(modICL$classification))
@@ -750,6 +771,19 @@ D'après analyse descriptive précedante, on sait que T3_6h_R2 possède que des 
 ```{r, fig.height=3}
 table(reskmeans$cluster,data_quali$T3_6h_R2)
 ```
+
+```{r, fig.height=3}
+
+```
+
+```{r, fig.height=3}
+
+```
+
+```{r, fig.height=3}
+
+```
+
 
 ```{r, fig.height=3}
 
