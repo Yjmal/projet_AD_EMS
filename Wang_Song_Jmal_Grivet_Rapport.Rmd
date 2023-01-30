@@ -18,6 +18,7 @@ Tout ce qui se trouve dans le Rmarkdown mais pas dans le pdf est indiqué par ce
 
 ```{r setup, include=FALSE}
 library(knitr)
+library(nnet)
 opts_chunk$set(echo = TRUE)
 opts_knit$set(width=75)
 ```
@@ -64,6 +65,10 @@ library(gridExtra)
 library(leaps)
 library(MASS)
 library(glmnet)
+library(cluster)
+library(clusterSim)
+library(reshape)
+library(mclust)
 ```
 
 ```{python include=FALSE}
@@ -281,11 +286,319 @@ Commentaires à faire
 
 \newpage
 
+# Clustering
+Pour mieux comprendre les relations entre les variables et les gènes dans les différentes conditions, nous allons utiliser, dans cette partie, différentes méthodes de clustering pour obtenir une classification des variables "T_xxh_Rx" et des gènes ayant des profils d'expression similaires. 
+
+## Obtention d’une classification des variables ”T_x_xh_Rx”
+On reprend les 3 premières composantes principales de l'ACP effectué précedemment sur les variables. Les premières 3 composantes principales résument 90% de l'information.
+```{r, echo = F}
+data = read.delim("Data_Etudiants_2023.txt",header=TRUE, sep=";")
+res.pca.transpose = PCA(t(data), scale.unit = TRUE, ncp=15, graph=F)
+res.pca.transpose$eig[1:5,3]
+coord = (res.pca.transpose$ind$coord)[,1:3] # on prend les premières 3 composantes principales qui résument 90% d'information
+```
+
+
+### K means
+Avant d'appliquer l'algorithme K-means sur notre jeu de données, nous allons déterminer le nombre optimal de classes. Pour cela, nous allons tracer l’évolution de l’inertie intraclasse en fonction du nombre de classes.
+
+```{r, echo = F, fig.cap="\\label{fig:intraclasse}Evolution de l’inertie intraclasse en fonction du nombre de classes",fig.height=3}
+Kmax<-10
+reskmeanscl<-matrix(0,nrow=nrow(coord),ncol=Kmax-1)
+Iintra<-NULL
+for (k in 2:Kmax){
+  resaux<-kmeans(coord, k, nstart = 10)
+  # l'inertie intra-class augmente à cause de la instabilité de k-means, solution: refaire plusieurs fois de calcule avec option nstart
+  reskmeanscl[,k-1]<-resaux$cluster
+  Iintra<-c(Iintra,resaux$tot.withinss)
+}
+
+df<-data.frame(K=2:Kmax,Iintra=Iintra)
+ggplot(df,aes(x=K,y=Iintra))+geom_line()+geom_point()+xlab("Nombre de classes")+ylab("Inertie intraclasse")
+```
+
+```{r, echo =F, eval=F}
+## silhouette
+library(cluster)
+Silhou<-NULL
+for (k in 2:Kmax){
+   aux<-silhouette(reskmeanscl[,k-1],daisy(coord))
+   Silhou<-c(Silhou,mean(aux[,3]))
+}
+df<-data.frame(K=2:Kmax,Silhouette=Silhou)
+ggplot(df,aes(x=K,y=Silhouette))+
+  geom_point()+
+  geom_line()+theme(legend.position = "bottom")
+```
+
+On voit sur la figure \ref{fig:intraclasse} qu'il y a un coude pour K = 3. On retient donc 3 classes. Nous avons aussi appliqué sur le Rmd le critère silhouette, qui lui nous as donné un pic à K = 2, soit 2 classes.
+\newline
+On a représenté sur la figure \ref{fig:kmeans2} les résultats de kmeans sur les 2 premières composantes principales de l'ACP.
+
+```{r, echo = F, fig.cap="\\label{fig:kmeans2}Résultat du clustering Kmeans sur les 2 axes de l'ACP",fig.height=3}
+km = kmeans(coord, centers = 3)
+fviz_cluster(km,data=coord,axes = c(1,2), ellipse.type="norm",labelsize=8,geom=c("point","text"))+ggtitle("")
+```
+
+On remarque que le cluster 1 regroupe les traitements T2 et T3 du réplicat R1/R2 à 1h et le traitement T1 du réplicat R1/R2 pour toute les heures. Le cluster 2 regoupe les traitements T2 et T3 de 2h et 3h, Le cluster 3 regroupe quant à lui tous les traitements de 4h à 6h.
+\newline
+On retrouve les mêmes informations qu'avant: le traitement T2 et T3 réagissent de façon similaire. Comme T3 est une combinaison des traitements T1 et T2, on peut dire que c'est T2 qui domine les effets du traitement T3. 
+\newline
+Cependant, à l'heure débutante (1h), les traitements T2/T3 ont le même effet que T1 sur les gènes, on peut supposer que l'effet du traitement T2/T3 se déroule graduellement donc n'a pas encore manifesté à 1h.
+
+Effectuons maintenant un diagramme de silhouette afin de déterminer l'homogéité de nos 3 clusters.
+\newline
+On voit sur le diagramme de silhouette figure \ref{fig:silhouette} que les clusters 2 et 3 ont des scores de silhouette inférieurs au cluster 1. La cohésion des points du cluster 1 est donc plus grande. C'est-à-dire que le cluster 1 a moins d'outliers et est plus proches de son centre de gravité que les deux autres clusters. On peut cependant noter que le score de silhouette de chaque cluster est supérieure à 0.5, les partitions de chaque cluster sont globalement homogènes.
+
+```{r, echo = F, fig.cap="\\label{fig:silhouette}Graphique des silhouettes scores pour nos 3 clusters", fig.height=3}
+aux<-silhouette(km$cluster, daisy(coord))
+fviz_silhouette(aux)
+```
+
+### PAM
+On visualise le nombre de classes optimal par le critère Silhouette avec l’algorithme PAM:
+```{r, echo = F, fig.cap="\\label{fig:silhouette2}Critère silhouette en fonction du nombre de classe", fig.height=3}
+Kmax<-10
+resPAMcl<-matrix(0,nrow=nrow(coord),ncol=Kmax-1)
+Silhou<-NULL
+for (k in 2:Kmax){
+  resaux<-pam(coord,k,metric="euclidean")
+  resPAMcl[,k-1]<-resaux$clustering
+  aux<-silhouette(resPAMcl[,k-1], daisy(coord))
+  Silhou<-c(Silhou,mean(aux[,3]))
+}
+
+df<-data.frame(K=2:Kmax,Silhouette=Silhou)
+ggplot(df,aes(x=K,y=Silhouette))+
+  geom_point()+
+  geom_line()+theme(legend.position = "bottom")
+```
+On obtient le même résultat: 3 classes, et ils sont identiques qu'avec k-means.
+
+```{r, echo = F, fig.height=3}
+resPAM <- pam(coord, 3, metric = "euclidean")
+table(km$cluster,resPAM$clustering)
+```
+
+### Classification hiérarchique
+Effectuons maintenant une classification hiérarchique avec la mesure d'agregation de Ward.
+
+```{r, echo =F, fig.height=3}
+d = dist(coord)
+hclustsingle<-hclust(d, method = "single") # la distance euclidienne entre les points
+hclustcomplete<-hclust(d, method = "complete")
+hclustaverage<-hclust(d, method = "average")
+hward<-hclust(d,method="ward.D2")
+```
+
+On visualise l'hauteur du dendogramme avec la mésure d'agrégation de Ward.
+```{r, echo = F, fig.cap="\\label{fig:Ward}Résultat du clustering Kmeans sur les 2 axes de l'ACP",fig.height=3}
+Kmax <- 20
+df <- data.frame(K = 1:Kmax, height = sort(hclustaverage$height, decreasing = T)[1:Kmax])
+ggplot(df, aes(x = K, y = height)) + geom_line() + geom_point()
+```
+
+
+D'après la figure \ref{fig:Ward}, on voit qu'il y a un saut en k = 3 ou 6 puis la courbe s'aplanit, on retient donc 3 ou 6 classes.
+
+On a également essayé dans le Rmd de déterminer le nombre de classes à retenir avec l’indice de Calinski_Harabasz mais cela n'a pas marché. On voit que plus k est grand, plus l'indice Calinski-Harabasz augmente, il n'y a pas de pic sur la courbe, donc on peut pas déterminer une classification avec le critère Calinski-Harabasz.
+
+```{r, echo = F,  fig.cap="\\label{fig:calinski}Indice de Calinski-Harabasz en fonction du nombre de classe", fig.height=3}
+
+CH <- NULL
+Kmax <- 20
+for (k in 2:Kmax) {
+    CH <- c(CH, index.G1(coord, cutree(hward, k))) 
+    }
+daux <- data.frame(NbClust = 2:Kmax, CH = CH)
+ggplot(daux, aes(x = NbClust, y = CH)) + geom_line() + geom_point()
+```
+
+
+On trace maintenant la distribution des variables en fonction de la classification en 3 classes avec la mésure d'agrégation Ward.
+
+```{r, echo = F, fig.cap="\\label{fig:ward2}Distribution des variables en 3 classes avec la mesure de Ward",fig.height=3}
+ClassK3 = cutree(hward,k=3)
+df<-data.frame(coord,Class=as.factor(ClassK3))
+df<-melt(df,id="Class")
+ggplot(df,aes(x=variable,y=value))+geom_violin(aes(fill=Class))
+```
+
+Modèle mélange avec BIC:
+```{r, echo = F,fig.height=3}
+resBICdiag <- Mclust(coord, G = 2:10)
+fviz_mclust(resBICdiag, what = "BIC")
+```
+
+Modèle mélange avec ICL:
+```{r, echo=F, fig.height=3}
+resICL <- mclustICL(coord, G = 2:10)
+summary(resICL)
+```
+
+Si on retient 3 classes: CAH, modèle de mélange BIC et ICL donnent le même résultat de classification selon ARI = 1:
+```{r, echo = F, fig.height=3}
+resBIC <- Mclust(coord, G = 3, modelNames = "EEV")
+resICL <- Mclust(coord, G = 3, modelNames = "EEV")
+
+adjustedRandIndex(resBIC$classification,resICL$classification)
+adjustedRandIndex(resBIC$classification,ClassK3)
+```
+
+On visualise les 3 clusters en boxplot des probabilité d'appartenance et dans le plan de l'ACP:
+
+```{r, echo = F,fig.height=3}
+Aux <- data.frame(label = paste("Cl", resICL$classification, sep = ""), proba = apply(resICL$z,
+    1, max))
+h1 <- ggplot(Aux, aes(x = label, y = proba)) + geom_boxplot()
+h2 <- fviz_cluster(resICL, data = Data, ellipse.type = "norm", geom = "point") +
+    ggtitle("") + theme(legend.position = "none")
+grid.arrange(h1, h2, ncol = 2)
+```
+
+On compare les deux classifications: k = 2 avec kmeans et k=3 avec CAH ward:
+```{r, echo = F,fig.height=3}
+library(circlize)
+clust1<-paste("Kmeans-",km$cluster,sep="")
+clust2<-paste("CAH3-",cutree(hward,3),sep="")
+table(clust1,clust2)
+chordDiagram(table(clust1,clust2))
+```
+On voit que le cluster 1 de k-means égale à cluster 2 et 3 de CAH, qui représente 2h et 3h du traitement T2/T3 du réplicat R1/R2. Les gènes du traitemetns T2/T3 dans les heures aux milieux(2h, 3h) ont donc des comportements différents que l'heure débutante(1h) et heures finales(5h,6h), ce qui correspond à l'analyse précédante. 
+
+## Obtention d’une classification des gènes ayant des profils d’expression similaires (co-exprimés) dans les différentes conditions
+
+On travaille avec les données non transposé pour la classification des gènes:
+
+```{r, echo = F, fig.height=3}
+res.pca = PCA(data, ncp=15, scale.unit = TRUE, graph=F)
+res.pca$eig[1:7,3]
+coord2 = (res.pca$ind$coord)[,1:7] # 90% d'inertie
+```
+
+```{r,echo = F,  fig.height=3}
+fviz_nbclust(coord2, FUNcluster = kmeans, method = "silhouette")
+fviz_nbclust(coord2, FUNcluster = kmeans, method = "gap_stat")
+fviz_nbclust(coord2, FUNcluster = cluster::pam, method = "silhouette")
+```
+
+### k-means
+```{r, echo = F, fig.height=3}
+set.seed(12345)
+Kmax <- 20
+reskmeans <- matrix(0, nrow = nrow(coord2), ncol = (Kmax - 1))
+Iintra <- NULL
+Silhou <- NULL
+for (k in 2:Kmax) {
+    resaux <- kmeans(coord2, k, nstart = 10, iter.max = 30)
+    reskmeans[, (k - 1)] <- resaux$cluster
+    Iintra <- c(Iintra, resaux$tot.withinss)
+    aux <- silhouette(resaux$cluster, daisy(coord2))
+    Silhou <- c(Silhou, mean(aux[, 3]))
+}
+
+rm(resaux, aux)
+
+df <- data.frame(K = 2:Kmax, Iintra = Iintra, Silhou = Silhou)
+g1 <- ggplot(df, aes(x = K, y = Iintra)) + geom_line() + geom_point() + xlab("Nombre de classes") +
+    ylab("Inertie intraclasse")
+g2 <- ggplot(df, aes(x = K, y = Silhou)) + geom_line() + geom_point() + xlab("Nombre de classes") +
+    ylab("Critère Silhouette")
+grid.arrange(g1, g2, ncol = 2)
+```
+
+On retient 2 classes avec k-means, on visualise la classification obtenue sur le plan de l'ACP:
+```{r, echo = F, fig.height=3}
+reskmeans = kmeans(coord2,2)
+fviz_cluster(reskmeans,data=coord2,ellipse.type="norm",labelsize=8,geom=c("point"))+ggtitle("")
+fviz_pca_ind(res.pca, axes = c(1, 2), geom = c("point"), habillage = as.factor(reskmeans$cluster))
+```
+L'axe 1 de l'ACP sépare bien les deux clusters.
+
+### CAH 
+
+avec la mesure d'agrégation Ward
+```{r,echo = F,  fig.height=3}
+Kmax <- 20
+resward <- hclust(dist(coord2, method = "euclidean"), method = "ward.D2")
+df <- data.frame(K = 1:Kmax, height = sort(resward$height, decreasing = T)[1:Kmax])
+ggplot(df, aes(x = K, y = height)) + geom_line() + geom_point()
+```
+2 ou 3 class
+
+coupure avec la critère CH:
+```{r,echo = F,  fig.height=3}
+CH <- NULL
+Kmax <- 20
+for (k in 2:Kmax) {
+    CH <- c(CH, index.G1(coord2, cutree(resward, k)))
+}
+daux <- data.frame(NbClust = 2:Kmax, CH = CH)
+ggplot(daux, aes(x = NbClust, y = CH)) + geom_line() + geom_point()
+```
+2 class
+
+Visualization avec 2 classes:
+```{r,echo = F,  fig.height=3}
+ClassK2 = cutree(resward,k=2)
+df<-data.frame(coord2,Class=as.factor(ClassK2))
+df<-melt(df,id="Class")
+ggplot(df,aes(x=variable,y=value))+geom_violin(aes(fill=Class))
+```
+
+
+
+Modèle mélange avec BIC: ??
+```{r,echo = F,  fig.height=3}
+resBICdiag <- Mclust(coord2, G = 2:10)
+fviz_mclust(resBICdiag, what = "BIC")
+```
+
+Modèle mélange avec ICL: ??
+```{r, echo = F, fig.height=3}
+resICL <- mclustICL(coord2, G = 2:10)
+summary(resICL)
+```
+
+```{r, echo = F, fig.height=3}
+modICL <- Mclust(coord2, G = 6, modelNames = "VVV")
+Aux <- data.frame(label = paste("Cl", modICL$classification, sep = ""), proba = apply(modICL$z,
+    1, max))
+ggplot(Aux, aes(x = label, y = proba)) + geom_boxplot()
+```
+La classification n'a pas été bien faite, il y a beaucoup de outliers avec probabilité d'appartenance jusqu'à 50%.
+
+```{r, echo = F, fig.height=3}
+df <- data.frame(coord2, Class = as.factor(modICL$classification))
+df <- melt(df, id = "Class")
+ggplot(df, aes(x = variable, y = value)) + geom_violin(aes(fill = Class))
+```
+
+Transformation en data qualitative avec modalités -1, 0 et 1:
+```{r, echo = F, fig.height=3}
+data = read.delim("Data_Etudiants_2023.txt",header=TRUE, sep=";")
+data_quali = data
+data_quali[data_quali > 1] = 1
+data_quali[data_quali < -1] = -1
+data_quali[data_quali > -1 & data_quali < 1] = 0
+```
+
+D'après analyse descriptive précedante, on sait que T3_6h_R2 possède que des gènes sur-exprimé et sous-exprimé, donc en comparant avec T3_6h_R2, on en déduit que les deux cluters qu'on a obtenu sépare les profils d’expression non-similaires (sur et sous-exprimé), qui veut dire regroupe les profils co-exprimés:
+```{r, echo = F, fig.height=3}
+table(reskmeans$cluster,data_quali$T3_6h_R2)
+```
+
+
+\newpage
+
 # Etude de l'expression des gènes pour le traitement T3 à 6h
+
+Nous allons dans cette partie étudier l'expression des gènes pour le traitement T3 à 6h. Nous allons notamment évaluer les temps clés qui influencent l'expression des gènes et étendre cette analyse à tous les traitements et temps. Nous allons également découvrir les facteurs prédictifs qui permettent de distinguer les gènes sur-exprimés et les gènes sous-exprimés pour le traitement T3 à 6 heures.
 
 ## Modèle linéaire
 
-
+Nous allons étudier l'expression des gènes pour le traitement T3 à 6 heures par un modèle linéaire par rapport aux autres heures.
+\newline
 
 
 ```{r, echo = F}
@@ -293,10 +606,12 @@ T3 = data[grep("T3", names(data), value=TRUE)]
 T3R2 = T3[grep("R2", names(T3), value=TRUE)]
 ```
 
-```{r include=FALSE}
+```{r echo = F}
 reg.mul <- lm(T3_6h_R2 ~ ., data = T3R2)
 summary(reg.mul)
 ```
+
+Pour identifier les temps qui ont une réelle influence sur l'expression des gènes à ce stade nous effectuons une sélection de variable avec différents critères.
 
 ```{r, echo = F, fig.cap="\\label{fig:selection1}Selection de variable du traitement 3 selon le critère BIC et la méthode backward", fig.height=3.5}
 choix=regsubsets(T3_6h_R2~., data = T3R2, nbest = 1, nvmax = 5, method = "backward")
@@ -316,11 +631,12 @@ choix=regsubsets(T3_6h_R2~., data = T3R2, nbest = 1, nvmax = 5, method = "forwar
 plot(choix,scale = "Cp")
 ```
 
-On a réalisé notre sélection de variables avec tous les critères (BIC, adjr2, Cp) et avec les méthodes forward et backward. Nous avons eu les mêmes résultats :
+On a réalisé notre sélection de variables avec tous les critères (BIC, adjr2, Cp) et avec les méthodes forward et backward. Nous avons eu les mêmes résultats.
 
 On garde toutes les variables mais on observe quand même une gradation. Le temps précédent (5h) est le plus influent suivi du temps de démarrage (1h, 2h). On peut faire l'hypothèse d'une périodicité de temps sur l'influence des traitements sur les gènes. Il faudrait tester cette sélection de variable sur plus d'heures afin valider ou non cette hypothèse.
 
 ### Etude sur tous les traitements et tous les temps
+Réalisons maintenant la même étude mais cette fois ci sur tous les traitements et tous les temps.
 
 ```{r, echo = F}
 R2 = data[grep("R2", names(data), value = TRUE)]
@@ -378,23 +694,70 @@ plot(fitlasso,label= TRUE)
 abline(v = 0.7)
 ```
 
-On voit que les variables les plus affectantes sont (13, 18): T3_1h_R2, T3_6h_R2 
+On voit que les variables les plus affectantes sont les variables 13 et 18 soit T3_1h_R2, T3_6h_R2.
 
 \newpage
 
 ## Modèle linéaire généralisé
 
 On veut chercher les variables prédictives qui permettent de discriminer les gènes sur-exprimés (Y\>1) des gènes sous-exprimés (Y\<-1) à 6h pour le traitement T3.
+\newline
+La sortie est binaire, nous allons donc chercher les variables prédictives par une régression logistique sur le réplicat 2 uniquement (puisque nous avions montré précedemment que le réplicat 1 était similaire en comportement au réplicat 2).
 
-```{r}
-sur_exp = T3R2[T3R2>1]
+
+```{r, echo = F}
+T36HR2_binomial = R2 # Toutes les variables du réplicat 2
+# On rend T3_6h_R2 binomial
+T36HR2_binomial$T3_6h_R2[T36HR2_binomial$T3_6h_R2>1] = 1
+T36HR2_binomial$T3_6h_R2[T36HR2_binomial$T3_6h_R2<(-1)] = 0
+T36HR2_binomial$T3_6h_R2 = as.factor(T36HR2_binomial$T3_6h_R2)
+# Modèle linéaire généralisé
+glm.T36HR2<-glm(T36HR2_binomial$T3_6h_R2~., data=T36HR2_binomial,family=binomial(link="logit"), control = glm.control(maxit = 100))
+summary(glm.T36HR2)
 ```
 
-```{r}
-apply(T3R2["T3_1h_R2">1], 2, sum)
+En prenant en compte toutes les variables, le modèle linéaire généralisé n'arrive pas à bien ajuster le modèle. On remarque que toutes les pvaleurs sont égales à 1.
+\newline
+Ceci est probablement dû au fait que les variables sont très liées les unes aux autres.
+
+```{r include=F, echo = F}
+step.backward <- step(glm.T36HR2, trace=F)
+summary(step.backward)
 ```
+
+Cependant, d'après la table lorsqu'on fait une sélection de variable "backward" sur notre modèle, on obtient que T3_6h_R2 peut s'expliquer par les variables : T1_4h_R2, T1_6h_R2, T2_5h_R2, T3_3h_R2.
+
+```{r include=F, echo = F}
+stepAIC(glm.T36HR2, direction=c("forward"),p=2, trace=F) # AIC
+```
+
+
+Peut importe les combinaisons de traitement qu'on prend en pour expliquer T3_6h_R2, on obtient la même erreur (des pvaleurs toutes égales à 1) sauf lorsqu'on prend seulement le traitement 1. 
+\newline
+Dans ce cas, on obtient que T3_6h_R2 s'explique par T1_1h_R2, T1_2h_R2, T1_3h_R2, T1_4h_R2, T1_6h_R2 par une sélection de variable "backward".
+
+```{r, echo = F}
+T1 = data[grep("T1", names(data), value=TRUE)]
+T1R2 = T1[grep("R2", names(T1), value=TRUE)]
+T1R2_T3_6h_R2 = T1R2
+T1R2_T3_6h_R2["T3_6h_R2"] = data$T3_6h_R2 # Seulement T1R2 (et la variable à expliquer : T3_6h_R2)
+
+T1R2_T3_6h_R2$T3_6h_R2[T1R2_T3_6h_R2$T3_6h_R2>1] = 1
+T1R2_T3_6h_R2$T3_6h_R2[T1R2_T3_6h_R2$T3_6h_R2<(-1)] = 0
+T1R2_T3_6h_R2$T3_6h_R2 = as.factor(T1R2_T3_6h_R2$T3_6h_R2)
+glm.T1R2_T3_6h_R2<-glm(T3_6h_R2~.,data=T1R2_T3_6h_R2,family=binomial(link="logit"))
+summary(glm.T1R2_T3_6h_R2)
+```
+
+```{r include=F, echo = F}
+step.backward <- step(glm.T1R2_T3_6h_R2, trace=F)
+summary(step.backward)
+```
+
+
 
 # Etude de l'expression des gènes pour le traitement T1 à 6h 
+Nous allons dans cette partie étudier l'expression des gènes pour le traitement T1 à 6h. Nous allons notamment repérer les temps influent l'expression de ces gènes ainsi que les variables prédictives qui permettent de discriminer les gènes sur-exprimés des gènes sous-exprimés, à 6h pour le traitement T1.
 
 ## Modèle linéaire
 
@@ -487,7 +850,7 @@ anova(mod.fin,mod.debut)
 
 p-valeur = 0.09 \> 0.05, on ne rejette pas H0 au risque de 5%, on accepte le sous-modèle.
 
-On voit que l'expression des gènes à 6h pour le traitement T1 est affecté par - les heures finales (3h, 4h, 5h) du traitement T1 - les heures débutantes (1h, 2h, 3h) et finale(6h) du traitements T2 - les heures débutantes (1h) et finales (5h, 6h) du traitement T3
+On voit que l'expression des gènes à 6h pour le traitement T1 est affecté par - les heures finales (3h, 4h, 5h) du traitement T1 - les heures débutantes (1h, 2h, 3h) et finale(6h) du traitements T2 - les heures débutantes (1h) et finales (5h, 6h) du traitement T3.
 
 ### Lasso
 
@@ -503,3 +866,30 @@ abline(v = 0.7)
 On voit que les variables les plus affectantes sont ??
 
 ## Modèle linéaire généralisé
+
+On veut chercher les variables prédictives qui permettent de discriminer les gènes sur-exprimés (Y\>1), les gènes sous-exprimés (Y\<-1), et les gènes non-exprimés à 6h pour le traitement T1.
+\newline
+La sortie est binaire, nous allons donc chercher les variables prédictives par une régression logistique sur le réplicat 2 uniquement (puisque nous avions montré précedemment que le réplicat 1 était similaire en comportement au réplicat 2).
+
+```{r, echo = F}
+
+Y = data["T1_6h_R2"]
+Y[Y<(-1)] = "sous-exprime"
+Y[Y>1 & Y!="sous-exprime"] = "sur-exprime"
+Y[Y!="sur-exprime" & Y!="sous-exprime"] = "non-exprime"
+Y$T1_6h_R2 = as.factor(Y$T1_6h_R2)
+
+dfmodel = R2
+dfmodel["Y"] = Y
+dfmodel = dfmodel[-(6)]
+model <- multinom(Y ~ ., data = dfmodel, trace=F)
+summary(model)
+```
+
+```{r include=F, echo = F}
+step.backward <- step(model, trace=F)
+summary(step.backward)
+```
+
+En faisant une sélection de modèle en mode "backward" on peut exprimer T1_6h_R2 par : T1_3h_R2, T1_4h_R2, T1_5h_R2, T2_2h_R2, T2_5h_R2, T3_1h_R2, T3_5h_R2, T3_6h_R2
+
