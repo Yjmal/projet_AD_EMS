@@ -9,17 +9,14 @@ output:
     toc : TRUE
     toc_depth : 2
     number_section : TRUE
-  
-
 ---
-
+\vspace{3em}
 Tout ce qui se trouve dans le Rmarkdown mais pas dans le pdf est indiqué par ce symbole : (%%)
-
 
 ```{r setup, include=FALSE}
 library(knitr)
 library(nnet)
-opts_chunk$set(echo = TRUE)
+opts_chunk$set(echo = TRUE, cache=TRUE)
 opts_knit$set(width=75)
 ```
 
@@ -27,30 +24,19 @@ opts_knit$set(width=75)
 
 # Introduction
 
-On observe pour G = 1615 gènes d’une plante modèle les valeurs suivantes :
-$$Y_{gtsr} = log_2 (X{gtsr} + 1) - log_2(X{gt0} + 1)$$ 
-avec 
-\newline
-• $X{gtsr}$ la mesure d’expression du gène g $\in$ {G1, . . . , G1615} pour le traitement t $\in$ {T1, T2, T3}
-pour le réplicat r $\in$ {R1, R2} et au temps s $\in$  {1h, 2h, 3h, 4h, 5h, 6h}
-\newline
-• $X{gt0}$ l’expression du gène g pour un traitement de référence t0
+On observe pour G = 1615 gènes d'une plante modèle les valeurs suivantes : $$Y_{gtsr} = log_2 (X_{gtsr} + 1) - log_2(X_{gt_0} + 1)$$ avec \newline • $X_{gtsr}$ la mesure d'expression du gène g $\in$ {G1, . . . , G1615} pour le traitement t $\in$ {T1, T2, T3} pour le réplicat r $\in$ {R1, R2} et au temps s $\in$ {1h, 2h, 3h, 4h, 5h, 6h} \newline • $X_{gt_0}$ l'expression du gène g pour un traitement de référence t_0
 
 \vspace{1em}
-Nous allons répartir l'étude de ce jeu de données en 4 parties :
-\newline
-• Analyse du jeu de données
-\newline
-• Clustering
-\newline
-• Etude de l'expression des gènes pour le traitement T3 à 6h
-\newline
-• Etude de l'expression des gènes pour le traitement T1 à 6h
 
+Nous allons répartir l'étude de ce jeu de données en 4 parties : \newline
+1 Analyse du jeu de données \newline
+2 Clustering \newline
+3 Etude de l'expression des gènes pour le traitement T3 à 6h \newline
+4 Etude de l'expression des gènes pour le traitement T1 à 6h
 
 # Analyse du jeu de données
 
-Nous allons dans cette partie effectuer une analyse des statistiques descriptives et préparer le jeu de données afin d'en sortir les variables redondantes, transformations, outliers et visualiser le jeu de données dans un espace de faible dimension (en particulier l’aspect réplicat biologique, l’effet traitement et l’effet temps)
+Nous allons dans cette partie effectuer une analyse des statistiques descriptives et préparer le jeu de données afin d'en sortir les variables redondantes, transformations, outliers et visualiser le jeu de données dans un espace de faible dimension (en particulier l'aspect réplicat biologique, l'effet traitement et l'effet temps)
 
 ## Statistiques descriptives et préparation du jeu de données
 
@@ -121,9 +107,7 @@ kable(head(round(data[1:8],2)),caption="\\label{tab:tabdata}Les premières ligne
 \vspace{1em}
 
 Le jeu de données contient `r dim(data)[1]` individus et `r dim(data)[2]` variables, toutes quantitatives.\
-Les attributs du jeu de données sont : 
-\newline 
-`r attributes(data)$names`
+Les attributs du jeu de données sont : \newline `r attributes(data)$names`
 
 \vspace{1em}
 
@@ -151,11 +135,9 @@ ggplot(stack(data), aes(x = ind, y = values))+
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 ```
 
-On remarque dans la figure \ref{fig:boxplots} que les boxplots du traitement 2 et du traitement 3 ne sont pas centrés, ils ont donc un effet non nul sur les gènes. En étudiant la forme des boxplots, on remarque une dissymétrie pour ces deux traitements, des nombreux outliers ainsi qu'une forte variabilité entre les individus.
-\newline
-Les boxplots du traitement 2 et du traitement 3 sont d'ailleurs similaires, quelque soit le réplicat. On peut donc faire l'hypothèse que ces deux traitements donnent des résultats similaires. 
-\vspace{0.2cm}
-Le traitement 1 est quant à lui beaucoup plus réduit et centré en 0. Ce traitement semble donc ne pas avoir d'effet sur les gènes. Les boxplots du traitement 1 sont symétriques mais possèdent beaucoup d'outliers.
+On remarque dans la figure \ref{fig:boxplots} que les boxplots du traitement 2 et du traitement 3 ne sont pas centrés. On peut penser qu'ils ont donc un effet non nul sur les gènes. En étudiant la forme des boxplots, on remarque une dissymétrie pour ces deux traitements, de nombreux outliers ainsi qu'une forte variabilité entre les individus. \newline
+Les boxplots du traitement 2 et du traitement 3 sont d'ailleurs similaires, quelque soit le réplicat. On peut donc faire l'hypothèse que ces deux traitements donnent des résultats similaires. \vspace{0.2cm}
+Le traitement 1 est quant à lui beaucoup plus réduit et centré en 0. Ce traitement semble donc ne pas avoir d'effet sur les gènes. Les boxplots du traitement 1 sont symétriques mais possèdent également beaucoup d'outliers.
 
 ```{python include=FALSE}
 fig=px.box(datapy)
@@ -168,9 +150,7 @@ fig.show()
 corrplot(cor(data), method="ellipse")
 ```
 
-La figure \ref{fig:corrplots} des corrélations nous confirme bien l'hypothèse précédente, les traitements 2 et 3 sont fortement corrélés alors que ces traitements semblent totalement décorellés du traitements 1. 
-\newline
-On peut également noter le fait que, pour un traitement donné, le réplicat 1 et le réplicat 2 sont fortement correlé entre eux, ce qui est cohérent puisque ce sont des réplicats biologiques. On pourra donc par la suite uniquement faire notre étude uniquement sur 1 seul réplicat, sans perdre trop d'informations.
+La figure \ref{fig:corrplots} des corrélations nous confirme bien l'hypothèse précédente, les traitements 2 et 3 sont fortement corrélés alors que ces traitements semblent totalement décorellés du traitements 1. \newline On peut également noter le fait que, pour un traitement donné, le réplicat 1 et le réplicat 2 sont fortement correlés entre eux, ce qui est cohérent puisque ce sont des réplicats biologiques. On pourra donc par la suite faire notre étude uniquement sur un seul réplicat (réplicat 2) sans perdre trop d'informations.
 
 \newpage
 
@@ -180,7 +160,7 @@ sns.heatmap(datapy.corr(),cmap = sns.color_palette('coolwarm',as_cmap = True))
 plt.show()
 ```
 
-```{r, echo = F, fig.cap="\\label{fig:expressiongenes}Fréquence de l'expression des gènes sous-exprimés, normaux et sur-exprimés en fonction des traitements", fig.height=3.3}
+```{r, echo = F, fig.cap="\\label{fig:expressiongenes}Fréquence de l'expression des gènes sous-exprimés, normaux et sur-exprimés en fonction des traitements", fig.height=3}
 # Fréquence de l'expression des gènes ("sous-exprimés", "normaux" et "sur-exprimés") en fonction des traitements
 BP = array(rep(rep(0,3),36), dim=c(3,36))
 BP[1,] = apply(data>1, 2, sum)
@@ -188,13 +168,10 @@ BP[2,] = apply(data<=1&data>=(-1), 2, sum)
 BP[3,] = apply(data<(-1), 2, sum)
 BP = BP/nrow(data)
 barplot(BP, main="Fréquences", col=c("blue", "grey", "red"), names.arg=c(attributes(data)$names))
-legend(0,0.6, legend=c("sur-exprimé", "normal", "sous-exprimé"), title="Type de gène", box.col="grey", fill=c("blue", "grey", "red"), cex=0.65)
+legend(0,0.6, legend=c("sur-exprimé", "non-exprimé", "sous-exprimé"), title="Type de gène", box.col="grey", fill=c("blue", "grey", "red"), cex=0.65)
 ```
 
-La graphique \ref{fig:expressiongenes} représente la fréquence des gènes "sous-exprimés", "normaux" et "sur-exprimés" pour chaque traitement à toute heure sur les deux réplicats. 
-\newline
-Il appuie notre hypothèse que les traitements 2 et 3 sont similaires et que le traitement 1 n'a pas beaucoup d'effet.
-
+La graphique \ref{fig:expressiongenes} représente la fréquence des gènes "sous-exprimés", "non-exprimés" et "sur-exprimés" pour chaque traitement à toute heure sur les deux réplicats. \newline Il appuie notre hypothèse que les traitements 2 et 3 sont similaires et que le traitement 1 n'a pas beaucoup d'effet.
 
 ```{python include=FALSE, echo = F}
 d1 = datapy[datapy > 1].count()
@@ -209,7 +186,7 @@ fig = px.bar(somme)
 fig.show()
 ```
 
-```{r, echo = F, fig.cap="\\label{fig:freqG3H6}Fréquence de la valeur des gènes du traitement 3 à l'heure 6", fig.height=2.5}
+```{r, echo = F, fig.cap="\\label{fig:freqG3H6}Fréquence de la valeur des gènes du traitement 3 à l'heure 6", fig.height=2}
 hist(data[,18])
 ```
 
@@ -221,7 +198,10 @@ fig.show()
 ```
 
 \newpage
+
 ## Analyse en composante principale
+
+### Analyse en composante principale sur les individus
 
 ```{r include=FALSE, echo = F}
 data_centree_reduite = scale(data)
@@ -230,13 +210,13 @@ res.pca = PCA(data, ncp=15, graph=F)
 summary(res.pca)
 ```
 
-
-
-```{r, echo = F,fig.cap="\\label{fig:variancepercentage}Variance expliquée cumulée (en %) des différentes composantes principales", fig.height=3}
+```{r, echo = F,fig.cap="\\label{fig:variancepercentage}Variance expliquée cumulée (en %) des différentes composantes principales"}
 barplot(cumsum(res.pca$eig[, "percentage of variance"]))
 abline(h=95, col="blue")
 abline(h=99, col="red")
 ```
+
+D'après le graphique \ref{fig:variancepercentage}, on note que : \newline - Pour avoir 95% de l'information, on peut réduire nos données à 10 dimensions. \newline - Pour avoir 99% de l'information il suffit de se placer en dimension 18.
 
 ```{r include=FALSE}
 cumsum(res.pca$eig[, "percentage of variance"])
@@ -270,19 +250,16 @@ plt.grid()
 plt.title('sum of percentage of variance')
 ```
 
-D'après le graphique \ref{fig:variancepercentage}, on note que : 
-\newline
-- Pour avoir 95% de l'information, on peut réduire nos données à 10 dimensions.
-\newline
-- Pour avoir 99% de l'information il suffit de se placer en dimension 18.
-
-
-```{r, echo = F, fig.cap="\\label{fig:pca2components}Visualitaion de l'ACP sur les deux premières composantes principales, pour les individus (à gauche) et pour les variables (à droite)", fig.height=2.5}
+```{r, echo = F, fig.cap="\\label{fig:pca2components}Visualitaion de l'ACP sur les deux premières composantes principales, pour les individus (à gauche) et pour les variables (à droite)", fig.height=2}
 col_trait = rep(rep(c(1,2,3), each=6),2)
 g1 = fviz_pca_ind(res.pca, label="n one")
 g2 = fviz_pca_var(res.pca, col.var=col_trait) + scale_color_gradient2(low="blue", mid="black", high="red", midpoint=2)
 grid.arrange(g1,g2,ncol=2)
 ```
+
+La première composante principale de la figure \ref{fig:pca2components} nous dit si un gène réagit au traitement 2 ou 3. Si le gène réagit fortement à l'un de ces traitements, c'est-à-dire s'il est sur-exprimé (resp. sous-exprimé), il se trouvera à droite (resp. à gauche) du graphique et s'il ne réagit pas beaucoup à l'un de ces traitement il se trouvera au centre.
+
+La deuxième composante principale nous dit si un gène réagit au traitement 1. Si le gène réagit fortement à ce traitement, c'est-à-dire s'il est sur-exprimé (resp. sous-exprimé), il se retrouve en haut (resp. en bas) du graphique. Par contre, si le gène ne réagit pas beaucoup au traitement 1, il se trouve au milieu.
 
 ```{python, include = F}
 fig = px.box(data_scale)
@@ -318,14 +295,9 @@ res.pca$var$cor[,1]/sum(res.pca$var$cor[,1])*100
 res.pca$var$cor[,2]/sum(res.pca$var$cor[,2])*100
 ```
 
-
-La première composante principale de la figure \ref{fig:pca2components} nous dit si un gène réagit au traitement 2 ou 3. Si le gène réagit fortement à l'un de ces traitements, il se trouve aux extrémités du cercle (si le gène devient très sous-exprimé ou très sur-exprimé) et s'il ne réagit pas beaucoup à l'un de ces traitement il se trouve au milieu du cercle.
-
-La deuxième composante principale nous dit si un gène réagit au traitement 1. Si le gène réagit fortement à ce traitement, c'est-à-dire s'il est sur-exprimé (resp. sous-exprimé), il se retrouve en haut (resp. en bas) du cercle. Par contre, si le gène ne réagit pas beaucoup au traitement 1, il se trouve au milieu.
-
 \newpage
 
-### Analyse en composante principale sur les données transposées
+### Analyse en composante principale sur les données transposées (variables)
 
 ```{r include=FALSE}
 data_transpose = t(data)
@@ -362,12 +334,12 @@ plt.grid()
 plt.title('sum of percentage of variance')
 ```
 
-
-```{r, echo = F, fig.cap="\\label{fig:variancepercentage2}Variance expliquée cumulée (en %) des différentes composantes principales", fig.height=3}
+```{r, echo = F, fig.cap="\\label{fig:variancepercentage2}Variance expliquée cumulée (en %) des différentes composantes principales"}
 barplot(cumsum(res.pca.transpose$eig[, "percentage of variance"]))
 abline(h=95, col="blue")
 abline(h=99, col="red")
 ```
+
 ```{python include = F}
 eig_transpose.plot.bar(x = "Dimension", y = "% cum. var. expliquée") # permet un diagramme en barres
 plt.text(5, 18, "17%") # ajout de texte
@@ -375,12 +347,7 @@ plt.axhline(y = 17, linewidth = .5, color = "dimgray", linestyle = "--") # ligne
 plt.show()
 ```
 
-
-D'après le graphique \ref{fig:variancepercentage2}, on note que : 
-\newline
-Pour avoir 95% de l'information, on peut réduire nos données à 13 dimensions.
-\newline
-Pour avoir 99% de l'information il suffit de se placer en dimension 21.
+D'après le graphique \ref{fig:variancepercentage2}, on note que : \newline Pour avoir 95% de l'information, on peut réduire nos données à 13 dimensions. \newline Pour avoir 99% de l'information il suffit de se placer en dimension 21.
 
 \vspace{2em}
 
@@ -388,11 +355,16 @@ Pour avoir 99% de l'information il suffit de se placer en dimension 21.
 cumsum(res.pca.transpose$eig[, "percentage of variance"])
 ```
 
-```{r, echo = F, fig.height=3}
+```{r, echo = F, fig.cap="\\label{fig:pcatranspose2components}Visualitaion de l'ACP sur les deux premières composantes principales, pour les individus (à gauche) et pour les variables (à droite)"}
 g1 = fviz_pca_var(res.pca.transpose, col.var=data$T3_6h_R2, label="none") + scale_color_gradient2(low="blue", mid="black", high="red", midpoint=0)
 g2 = fviz_pca_ind(res.pca.transpose, axes=c(1, 2), autoLab="yes", col.ind=col_trait) + scale_color_gradient2(low="blue", mid="black", high="red", midpoint=2)
-grid.arrange(g1,g2,ncol=2)
+grid.arrange(g2,g1,ncol=2)
 ```
+
+La première composante principale de la figure \ref{fig:pcatranspose2components} nous dit si le traitement correspond à T1 (à gauche) ou à T2/T3 (à droite).
+
+La deuxième composante principale nous dit si l'heure du traitement est supérieure ou égale à 4h (en haut) ou inférieur à 4h (en bas).
+
 ```{python include = F}
 coord1=pca_transpose.components_[0]*np.sqrt(pca_transpose.explained_variance_[0])
 coord2=pca_transpose.components_[1]*np.sqrt(pca_transpose.explained_variance_[1])
@@ -419,17 +391,17 @@ plt.suptitle("Premier plan factoriel ") # titre général
 plt.show()
 ```
 
-
-Commentaires à faire
-
 \newpage
 
 # Clustering
-Pour mieux comprendre les relations entre les variables et les gènes dans les différentes conditions, nous allons utiliser, dans cette partie, différentes méthodes de clustering pour obtenir une classification des variables "T_xxh_Rx" et des gènes ayant des profils d'expression similaires. 
 
-## Obtention d’une classification des variables ”T_x_xh_Rx”
+Pour mieux comprendre les relations entre les variables et les gènes dans les différentes conditions, nous allons utiliser, dans cette partie, différentes méthodes de clustering pour obtenir une classification des variables "Tx_xh_Rx" et des gènes ayant des profils d'expression similaires.
+
+## Obtention d'une classification des variables "Tx_xh_Rx"
+
 On reprend les 3 premières composantes principales de l'ACP effectué précedemment sur les variables. Les premières 3 composantes principales résument 90% de l'information.
-```{r, echo = F}
+
+```{r, include = F}
 data = read.delim("Data_Etudiants_2023.txt",header=TRUE, sep=";")
 res.pca.transpose = PCA(t(data), scale.unit = TRUE, ncp=15, graph=F)
 res.pca.transpose$eig[1:5,3]
@@ -460,11 +432,12 @@ np.cumsum(pca.explained_variance_ratio_)
 coord = pd.DataFrame(acp[:,0:3],columns = ['Dim 1', 'Dim 2', 'DIm 3'])
 ```
 
-
 ### K means
-Avant d'appliquer l'algorithme K-means sur notre jeu de données, nous allons déterminer le nombre optimal de classes. Pour cela, nous allons tracer l’évolution de l’inertie intraclasse en fonction du nombre de classes.
 
-```{r, echo = F, fig.cap="\\label{fig:intraclasse}Evolution de l’inertie intraclasse en fonction du nombre de classes",fig.height=3}
+Avant d'appliquer l'algorithme K-means sur notre jeu de données, nous allons déterminer le nombre optimal de classes. Pour cela, nous allons tracer l'évolution de l'inertie intraclasse en fonction du nombre de classes.
+
+```{r, echo = F, fig.cap="\\label{fig:intraclasse}Evolution de l’inertie intraclasse (gauche) et du critère silhouette (droite) en fonction du nombre de classes"}
+library(cluster)
 Kmax<-10
 reskmeanscl<-matrix(0,nrow=nrow(coord),ncol=Kmax-1)
 Iintra<-NULL
@@ -476,8 +449,25 @@ for (k in 2:Kmax){
 }
 
 df<-data.frame(K=2:Kmax,Iintra=Iintra)
-ggplot(df,aes(x=K,y=Iintra))+geom_line()+geom_point()+xlab("Nombre de classes")+ylab("Inertie intraclasse")
+g1 = ggplot(df,aes(x=K,y=Iintra))+geom_line()+geom_point()+xlab("Nombre de classes")+ylab("Inertie intraclasse")
+
+## silhouette
+Silhou<-NULL
+for (k in 2:Kmax){
+   aux<-silhouette(reskmeanscl[,k-1],daisy(coord))
+   Silhou<-c(Silhou,mean(aux[,3]))
+}
+df<-data.frame(K=2:Kmax,Silhouette=Silhou)
+g2 = ggplot(df,aes(x=K,y=Silhouette))+ xlab("Nombre de classes")+
+  geom_point()+
+  geom_line()+theme(legend.position = "bottom")
+
+grid.arrange(g1, g2, ncol=2)
 ```
+
+On voit sur la figure \ref{fig:intraclasse}, pour l'inertie intraclasse, qu'il y a un coude pour K = 3. On retient donc 3 classes par ce criètre. Le critère silhouette montre un pic à K = 2, donc on retient 2 classes avec ce critère.
+\vspace{1em}
+On a représenté sur la figure \ref{fig:kmeans2} les résultats de kmeans à trois classes (gauche) et à deux classes (droite) sur les 2 premières composantes principales de l'ACP.
 
 ```{python, include = F, echo = F}
 InertieIntra = []
@@ -490,21 +480,6 @@ aux = pd.DataFrame({"K" : range(2, 10),
                     "InertieIntra" : InertieIntra})
 fig = px.line(aux, x='K', y='InertieIntra',labels={'x':'Number of clusters', 'y':'Inertie Intra'},markers=True)
 fig.show()
-```
-
-
-```{r, echo =F, include=F}
-## silhouette
-library(cluster)
-Silhou<-NULL
-for (k in 2:Kmax){
-   aux<-silhouette(reskmeanscl[,k-1],daisy(coord))
-   Silhou<-c(Silhou,mean(aux[,3]))
-}
-df<-data.frame(K=2:Kmax,Silhouette=Silhou)
-ggplot(df,aes(x=K,y=Silhouette))+
-  geom_point()+
-  geom_line()+theme(legend.position = "bottom")
 ```
 
 ```{python, echo = F, include = F}
@@ -521,14 +496,22 @@ fig = px.line(aux, x='K', y='Silhouette',labels={'x':'Number of clusters', 'y':'
 fig.show() 
 ```
 
-On voit sur la figure \ref{fig:intraclasse} qu'il y a un coude pour K = 3. On retient donc 3 classes. Nous avons aussi appliqué sur le Rmd le critère silhouette, qui lui nous as donné un pic à K = 2, soit 2 classes.
-\newline
-On a représenté sur la figure \ref{fig:kmeans2} les résultats de kmeans sur les 2 premières composantes principales de l'ACP.
-
-```{r, echo = F, fig.cap="\\label{fig:kmeans2}Résultat du clustering Kmeans sur les 2 axes de l'ACP",fig.height=3}
-km = kmeans(coord, centers = 2)
-fviz_cluster(km,data=coord,axes = c(1,2), ellipse.type="norm",labelsize=8,geom=c("point","text"))+ggtitle("")
+```{r, echo = F, fig.cap="\\label{fig:kmeans2}Résultat du clustering Kmeans à deux et trois classes sur les 2 premiers axes de l'ACP",fig.width=8}
+km = kmeans(coord, centers = 3)
+g1 = fviz_pca_ind(res.pca.transpose,habillage = as.factor(km$cluster),axes = c(1,2), geom=c("point","text"))+ggtitle("")
+km2 = kmeans(coord, centers = 2)
+g2 = fviz_pca_ind(res.pca.transpose, habillage = as.factor(km2$cluster),axes = c(1,2),geom=c("point","text"))+ggtitle("")
+grid.arrange(g1, g2, ncol=2)
 ```
+
+Pour un Kmeans à trois classes, on remarque que le cluster 1 regroupe les traitements T2 et T3 du réplicat R1/R2 à 1h et le traitement T1 du réplicat R1/R2 pour toutes les heures. Le cluster 2 regoupe les traitements T2 et T3 de 2h et 3h. Le cluster 3 regroupe les traitements T2 et T3 de 4h à 6h.
+\newline A l'heure de début (1h), les traitements T2/T3 ont le même effet que T1 sur les gènes, on peut supposer que l'effet du traitement T2/T3 se déroule graduellement donc ne s'est pas encore manifesté à 1h.
+\vspace{1em} 
+Le Kmeans à deux classes, regroupe seulement les classes deux et trois du Kmeans à trois classes.
+
+\vspace{1em} 
+
+Effectuons maintenant un diagramme de silhouette afin de déterminer l'homogéité de nos 3 clusters. \newline On voit sur le diagramme de silhouette figure \ref{fig:silhouette} que les clusters 1 et 2 ont des scores de silhouette inférieurs au cluster 3. La cohésion des points du cluster 3 est donc plus grande. C'est-à-dire que le cluster 3 a moins d'outliers et est plus proches de son centre de gravité que les deux autres clusters. On peut cependant noter que le score de silhouette de chaque cluster est supérieure à 0.5, les partitions de chaque cluster sont globalement homogènes.
 
 ```{python, echo = F, include = F}
 # on retient 3 classes
@@ -550,20 +533,15 @@ fig.show()
 pd.crosstab(kmeans.labels_,"freq")
 ```
 
-
-On remarque que le cluster 1 regroupe les traitements T2 et T3 du réplicat R1/R2 à 1h et le traitement T1 du réplicat R1/R2 pour toute les heures. Le cluster 2 regoupe les traitements T2 et T3 de 2h et 3h, Le cluster 3 regroupe quant à lui tous les traitements de 4h à 6h.
-\newline
-On retrouve les mêmes informations qu'avant: le traitement T2 et T3 réagissent de façon similaire. Comme T3 est une combinaison des traitements T1 et T2, on peut dire que c'est T2 qui domine les effets du traitement T3. 
-\newline
-Cependant, à l'heure débutante (1h), les traitements T2/T3 ont le même effet que T1 sur les gènes, on peut supposer que l'effet du traitement T2/T3 se déroule graduellement donc n'a pas encore manifesté à 1h.
-
-Effectuons maintenant un diagramme de silhouette afin de déterminer l'homogéité de nos 3 clusters.
-\newline
-On voit sur le diagramme de silhouette figure \ref{fig:silhouette} que les clusters 2 et 3 ont des scores de silhouette inférieurs au cluster 1. La cohésion des points du cluster 1 est donc plus grande. C'est-à-dire que le cluster 1 a moins d'outliers et est plus proches de son centre de gravité que les deux autres clusters. On peut cependant noter que le score de silhouette de chaque cluster est supérieure à 0.5, les partitions de chaque cluster sont globalement homogènes.
-
 ```{r, echo = F, fig.cap="\\label{fig:silhouette}Graphique des silhouettes scores pour nos 3 clusters", fig.height=3}
 aux<-silhouette(km$cluster, daisy(coord))
-fviz_silhouette(aux)
+aux2 = data.frame(aux)
+aux2c1 = aux2$sil_width[aux2$cluster==1]
+aux2c2 = aux2$sil_width[aux2$cluster==2]
+aux2c3 = aux2$sil_width[aux2$cluster==3]
+aux2 <- tableGrob(data.frame(c1=round(sum(aux2c1) / length(aux2c1),2), c2=round(sum(aux2c2) / length(aux2c2),2), c3=round(sum(aux2c3) / length(aux2c3),2)))
+g1 = fviz_silhouette(aux, print.summary = F)
+grid.arrange(aux2, g1, ncol=2, widths=c(1, 2.4))
 ```
 
 ```{python, echo = F, include = F}
@@ -572,9 +550,10 @@ visualizer = SilhouetteVisualizer(kmeansopt, colors='yellowbrick');
 visualizer.fit(coord)
 ```
 
-
 ### PAM
-On visualise le nombre de classes optimal par le critère Silhouette avec l’algorithme PAM.
+
+On visualise le nombre de classes optimal par le critère Silhouette avec l'algorithme PAM :
+
 ```{r, echo = F, fig.cap="\\label{fig:silhouette2}Critère silhouette en fonction du nombre de classe", fig.height=3}
 Kmax<-10
 resPAMcl<-matrix(0,nrow=nrow(coord),ncol=Kmax-1)
@@ -591,18 +570,23 @@ ggplot(df,aes(x=K,y=Silhouette))+
   geom_point()+
   geom_line()+theme(legend.position = "bottom")
 ```
+
 On obtient le même résultat: 3 classes, et ils sont identiques qu'avec k-means.
 
 ```{r, echo = F, fig.height=3}
-resPAM <- pam(coord, 3, metric = "euclidean")
-table(km$cluster,resPAM$clustering)
+resPAM <- pam(coord, 2, metric = "euclidean")
+table(km2$cluster,resPAM$clustering)
 ```
 
 ### Classification hiérarchique
+
 Effectuons maintenant une classification hiérarchique avec la mesure d'agregation de Ward.
 
 ```{r, echo =F, fig.height=3}
 d = dist(coord)
+hclustsingle<-hclust(d, method = "single") # la distance euclidienne entre les points
+hclustcomplete<-hclust(d, method = "complete")
+hclustaverage<-hclust(d, method = "average")
 hward<-hclust(d,method="ward.D2")
 ```
 
@@ -612,9 +596,11 @@ dendrogram(hward,no_labels=True,color_threshold=0);
 plt.show()
 ```
 
+D'après la figure \ref{fig:dendogram}, on voit qu'il y a un saut en k = 3 ou 6 puis la courbe s'aplanit, on retient donc 3 ou 6 classes.
 
+On a également essayé dans le Rmd de déterminer le nombre de classes à retenir avec l'indice de Calinski_Harabasz mais cela n'a pas marché. On voit que plus k est grand, plus l'indice Calinski-Harabasz augmente, il n'y a pas de pic sur la courbe, donc on peut pas déterminer une classification avec le critère Calinski-Harabasz.
 
-```{r, echo = F,  fig = F, fig.cap="\\label{fig:calinski}Indice de Calinski-Harabasz en fonction du nombre de classe", fig.height=3}
+```{r, echo = F,  fig.cap="\\label{fig:calinski}Indice de Calinski-Harabasz en fonction du nombre de classe", fig.height=3}
 
 CH <- NULL
 Kmax <- 20
@@ -625,7 +611,8 @@ daux <- data.frame(NbClust = 2:Kmax, CH = CH)
 ggplot(daux, aes(x = NbClust, y = CH)) + geom_line() + geom_point()
 ```
 
-On détermine le nombre de classes à retenir avec l’indice de Calinski_Harabasz figure \ref{fig:calinski}. Il y a un pic pour K = 3, on retient donc 3 classes.
+On détermine le nombre de classes à retenir avec l'indice de Calinski_Harabasz figure \ref{fig:calinski}. Il y a un pic pour K = 3, on retient donc 3 classes.
+
 ```{python, echo = F,  fig.cap="\\label{fig:calinski2}Indice de Calinski-Harabasz en fonction du nombre de classe", fig.height=3}
 
 model = AgglomerativeClustering()
@@ -651,33 +638,36 @@ fig=px.scatter(pca_df,x="Dim1", y="Dim2",color="CAH")
 fig.show()
 ```
 
-On trace maintenant la distribution des variables en fonction de la classification en 3 classes avec la mésure d'agrégation Ward.
 
-```{r, echo = F, fig.cap="\\label{fig:ward2}Distribution des variables en 3 classes avec la mesure de Ward",fig.height=3}
+```{r, include = F, fig.cap="\\label{fig:ward2}Distribution des variables en 3 classes avec la mesure de Ward",fig.height=3}
+# On trace maintenant la distribution des variables en fonction de la classification en 3 classes avec la mésure d'agrégation Ward.
 ClassK3 = cutree(hward,k=3)
 df<-data.frame(coord,Class=as.factor(ClassK3))
 df<-melt(df,id="Class")
 ggplot(df,aes(x=variable,y=value))+geom_violin(aes(fill=Class))
 ```
 
-```{python, echo = F, include = F} 
+```{python, echo = F, include = F}
 # la distribution en fonction de la classification
 aux=coord.assign(Clust=modelfin.labels_)
-sm = aux.melt(id_vars='Clust')
-fig=px.box(sm,x="Clust",y="value",facet_col="variable",facet_col_wrap=3,color="Clust")
+sm1 = aux.melt(id_vars='Clust')
+fig=px.box(sm1,x="Clust",y="value",facet_col="variable",facet_col_wrap=3,color="Clust")
 fig.show()
 ```
 
 \newpage
-#### Modèle de mélange 
+
+#### Modèle de mélange
 
 BIC : figure \ref{fig:bic}
+
 ```{r, echo = F, fig.cap="\\label{fig:bic}Modèle de mélange BIC", fig.height=3}
 resBICdiag <- Mclust(coord, G = 2:10)
 fviz_mclust(resBICdiag, what = "BIC")
 ```
 
 ICL : figure \ref{fig:icl3}
+
 ```{r, echo=F,fig.cap="\\label{fig:icl3}Modèle de mélange ICL", fig.height=3}
 resICL <- mclustICL(coord, G = 2:10)
 summary(resICL)
@@ -716,8 +706,8 @@ probamax=[np.max(probapost[x,:]) for x in range(len(coord))]
 pd.crosstab(labels,"freq")
 ```
 
-
 Si on retient 3 classes: CAH, modèle de mélange BIC et ICL donnent le même résultat de classification selon ARI = 1:
+
 ```{r, echo = F, fig.height=3}
 resBIC <- Mclust(coord, G = 3, modelNames = "EEV")
 resICL <- Mclust(coord, G = 3, modelNames = "EEV")
@@ -733,7 +723,8 @@ Aux <- data.frame(label = paste("Cl", resICL$classification, sep = ""), proba = 
     1, max))
 ggplot(Aux, aes(x = label, y = proba)) + geom_boxplot()
 ```
-Tous les individus ont bien été classé dans chacun des classes car les boxplots sont aplati à 1. 
+
+Tous les individus ont bien été classé dans chacun des classes car les boxplots sont aplati à 1.
 
 ```{r,echo = F, fig.cap="\\label{fig:pca2} Visualisation des 3 clusters sur le plan de l'ACP", fig.height=3}
 fviz_cluster(resICL, data = Data, ellipse.type = "norm", geom = "point") +
@@ -741,6 +732,7 @@ fviz_cluster(resICL, data = Data, ellipse.type = "norm", geom = "point") +
 ```
 
 On compare les deux classifications: k = 2 avec kmeans et k=3 avec CAH Ward:
+
 ```{r, echo = F,fig.cap="\\label{fig:chord}Diagramme de Chord entre les clusters de Kmeans et les clusters de CAH Ward",fig.height=3}
 
 clust1<-paste("Kmeans-",km$cluster,sep="")
@@ -748,9 +740,10 @@ clust2<-paste("CAH3-",cutree(hward,3),sep="")
 table(clust1,clust2)
 chordDiagram(table(clust1,clust2))
 ```
-On voit que le cluster 1 de k-means est égale aux cluster 2 et 3 de CAH, qui représente 2h et 3h du traitement T2/T3 du réplicat R1/R2. Les gènes du traitemetns T2/T3 dans les heures aux milieux(2h, 3h) ont donc des comportements différents que l'heure débutante(1h) et heures finales(5h,6h), ce qui correspond à l'analyse précédante. 
 
-## Obtention d’une classification des gènes ayant des profils d’expression similaires (co-exprimés) dans les différentes conditions
+On voit que le cluster 1 de k-means est égale aux cluster 2 et 3 de CAH, qui représente 2h et 3h du traitement T2/T3 du réplicat R1/R2. Les gènes du traitemetns T2/T3 dans les heures aux milieux(2h, 3h) ont donc des comportements différents que l'heure débutante(1h) et heures finales(5h,6h), ce qui correspond à l'analyse précédante.
+
+## Obtention d'une classification des gènes ayant des profils d'expression similaires (co-exprimés) dans les différentes conditions
 
 On travaille avec les données non transposé pour la classification des gènes.
 
@@ -770,10 +763,10 @@ pca.fit(data)
 acp = pca.fit_transform(data)
 coord2 = pd.DataFrame(acp[:,0:7],columns = ['Dim 1', 'Dim 2', 'Dim 3', 'Dim 4', 'Dim 5', 'Dim 6', 'Dim 7'])
 ```
+
 ### k-means
-Implementons l'algorithme K-means.
-\newline
-Commençons par déterminer le nombre de classe optimal. Nous avons implémenté sur la figure \ref{fig:gapstat} le gap statistic en fonction du nombre de classe. On trouve un pic pour K = 2. On choisi donc 2 classes. La méthode silhouette et la méthode des coudes (inertie intraclasse) ont également été implémenté sur le Rmd et nous donnent le même résultat.
+
+Implementons l'algorithme K-means. \newline Commençons par déterminer le nombre de classe optimal. Nous avons implémenté sur la figure \ref{fig:gapstat} le gap statistic en fonction du nombre de classe. On trouve un pic pour K = 2. On choisi donc 2 classes. La méthode silhouette et la méthode des coudes (inertie intraclasse) ont également été implémenté sur le Rmd et nous donnent le même résultat.
 
 ```{r,echo = F, fig.cap="\\label{fig:gapstat}Gap statistique en fonction du nombre de cluster", fig.height=3}
 fviz_nbclust(coord2, FUNcluster = kmeans, method = "gap_stat")
@@ -783,7 +776,6 @@ fviz_nbclust(coord2, FUNcluster = kmeans, method = "gap_stat")
 fviz_nbclust(coord2, FUNcluster = kmeans, method = "silhouette")
 fviz_nbclust(coord2, FUNcluster = cluster::pam, method = "silhouette")
 ```
-
 
 ```{r, echo = F, include = F}
 set.seed(12345)
@@ -836,7 +828,6 @@ fig = px.line(aux, x='K', y='Silhouette',labels={'x':'Number of clusters', 'y':'
 fig.show() 
 ```
 
-
 ```{r, echo = F, fig.cap="\\label{fig:acp5}Classification KMeans obtenue sur les gènes sur les axes de l'ACP", fig.height=3}
 reskmeans = kmeans(coord2,2)
 fviz_cluster(reskmeans,data=coord2,ellipse.type="norm",labelsize=8,geom=c("point"))+ggtitle("")
@@ -844,6 +835,7 @@ fviz_pca_ind(res.pca, axes = c(1, 2), geom = c("point"), habillage = as.factor(r
 ```
 
 On visualise la classification obtenue sur le plan de l'ACP figure \ref{fig:acp5}. L'axe 1 de l'ACP sépare bien les deux clusters.
+
 ```{python, echo = F, include = F}
 # on retient 2 classes
 kmeans = KMeans(n_clusters = 2, init = 'k-means++', max_iter = 300, n_init = 10, random_state = 0)
@@ -861,7 +853,6 @@ fig.show()
 pd.crosstab(kmeans.labels_,"freq")
 ```
 
-
 ### Classification hiérarchique avec mesure de Ward
 
 Effectuons maintenant une classification hiérarchique des gènes avec la mesure d'agregation de Ward.
@@ -872,15 +863,16 @@ dendrogram(hward,no_labels=True,color_threshold=0);
 plt.show()
 ```
 
+Afin de déterminer le nombre de classe optimal pour la classification hiérarchique, on trace la hauteur du dendogramme (fig \ref{fig:{dendogram3}}) en fonction du nombre de classe K.
 
-Afin de déterminer le nombre de classe optimal pour la classification hiérarchique, on trace la hauteur du dendogramme (fig \ref{fig:{dendogram3}}) en fonction du nombre de classe K. 
 ```{r,echo = F, fig.cap="\\label{fig:height3}Hauteur du dendogramme en fonction de K", fig.height=3}
 Kmax <- 20
 resward <- hclust(dist(coord2, method = "euclidean"), method = "ward.D2")
 df <- data.frame(K = 1:Kmax, height = sort(resward$height, decreasing = T)[1:Kmax])
 ggplot(df, aes(x = K, y = height)) + geom_line() + geom_point()
 ```
-La figure \ref{ref:{height3}) nous donne 2 ou 3 classes. On retrouve le même résultat avec l'indice de  Calinski-Harabasz et l'indice Silhouette implémenté sur le Rmd.
+
+La figure \\ref{ref:{height3}) nous donne 2 ou 3 classes. On retrouve le même résultat avec l'indice de Calinski-Harabasz et l'indice Silhouette implémenté sur le Rmd.
 
 ```{python, echo = F, include = F}
 # On détermine le nombre de classe avec indice de Calinski-Harabasz
@@ -894,8 +886,8 @@ visualizer.fit(coord2);
 visualizer.show()
 ```
 
-
 Visualisation avec 2 classes:
+
 ```{r,echo = F,  fig.height=3}
 ClassK2 = cutree(resward,k=2)
 df<-data.frame(coord2,Class=as.factor(ClassK2))
@@ -919,15 +911,17 @@ fig=px.scatter(pca_df,x="Dim1", y="Dim2",color="CAH")
 fig.show()
 ```
 
+### Modèle de mélange
 
-### Modèle de mélange 
 Modèle mélange avec BIC: ??
+
 ```{r,echo = F,  fig.height=3}
 resBICdiag <- Mclust(coord2, G = 2:10)
 fviz_mclust(resBICdiag, what = "BIC")
 ```
 
 Modèle mélange avec ICL: ??
+
 ```{r, echo = F, fig.height=3}
 resICL <- mclustICL(coord2, G = 2:10)
 summary(resICL)
@@ -955,13 +949,13 @@ fig = px.line(critdf, x='K', y='value', color='variable')
 fig.show()
 ```
 
-
 ```{r, echo = F, fig.height=3}
 modICL <- Mclust(coord2, G = 6, modelNames = "VVV")
 Aux <- data.frame(label = paste("Cl", modICL$classification, sep = ""), proba = apply(modICL$z,
     1, max))
 ggplot(Aux, aes(x = label, y = proba)) + geom_boxplot()
 ```
+
 La classification n'a pas été bien faite, il y a beaucoup de outliers avec probabilité d'appartenance jusqu'à 50%.
 
 ```{python, echo = F, include = F}
@@ -980,7 +974,6 @@ fig = px.box(aux, x="labels", y="probamax")
 fig.show()
 
 ```
-
 
 ```{r, echo = F, fig.height=3}
 df <- data.frame(coord2, Class = as.factor(modICL$classification))
@@ -1002,6 +995,7 @@ fig.show()
 ```
 
 Transformation en data qualitative avec modalités -1, 0 et 1:
+
 ```{r, echo = F, fig.height=3}
 data = read.delim("Data_Etudiants_2023.txt",header=TRUE, sep=";")
 data_quali = data
@@ -1020,8 +1014,8 @@ data_quali[(data > -1) & (data < 1)] = 0
 data_quali = pd.DataFrame(data = data_quali, columns = data.columns.values)
 ```
 
+D'après analyse descriptive précedante, on sait que T3_6h_R2 possède que des gènes sur-exprimé et sous-exprimé, donc en comparant avec T3_6h_R2, on en déduit que les deux cluters qu'on a obtenu sépare les profils d'expression non-similaires (sur et sous-exprimé), qui veut dire regroupe les profils co-exprimés:
 
-D'après analyse descriptive précedante, on sait que T3_6h_R2 possède que des gènes sur-exprimé et sous-exprimé, donc en comparant avec T3_6h_R2, on en déduit que les deux cluters qu'on a obtenu sépare les profils d’expression non-similaires (sur et sous-exprimé), qui veut dire regroupe les profils co-exprimés:
 ```{r, echo = F, fig.height=3}
 table(reskmeans$cluster,data_quali$T3_6h_R2)
 ```
@@ -1045,9 +1039,7 @@ Nous allons dans cette partie étudier l'expression des gènes pour le traitemen
 
 ## Modèle linéaire
 
-Nous allons étudier l'expression des gènes pour le traitement T3 à 6 heures par un modèle linéaire par rapport aux autres heures.
-\newline
-
+Nous allons étudier l'expression des gènes pour le traitement T3 à 6 heures par un modèle linéaire par rapport aux autres heures. \newline
 
 ```{r, echo = F}
 T3 = data[grep("T3", names(data), value=TRUE)]
@@ -1059,7 +1051,6 @@ data_T3_R2 = datapy[["T3_1h_R2","T3_2h_R2","T3_3h_R2","T3_4h_R2","T3_5h_R2"]]
 data_T3_6h_R2 = datapy["T3_6h_R2"] 
 type(data_T3_R2)
 ```
-
 
 ```{r echo = F}
 reg.mul <- lm(T3_6h_R2 ~ ., data = T3R2)
@@ -1104,8 +1095,8 @@ print('SST:', results.centered_tss)
 print('coefficient of determination:',round(float(results.rsquared),3))
 ```
 
-
 ### Etude sur tous les traitements et tous les temps
+
 Réalisons maintenant la même étude mais cette fois ci sur tous les traitements et tous les temps.
 
 ```{r, echo = F}
@@ -1113,13 +1104,13 @@ R2 = data[grep("R2", names(data), value = TRUE)]
 ```
 
 ```{python include = F}
+data_R2 = data[["T1_1h_R2","T1_2h_R2","T1_3h_R2", "T1_4h_R2","T1_5h_R2","T1_6h_R2","T2_1h_R2","T2_2h_R2","T2_3h_R2","T2_4h_R2","T2_5h_R2","T2_6h_R2","T3_1h_R2","T3_2h_R2","T3_3h_R2","T3_4h_R2","T3_5h_R2","T3_6h_R2"]]
 data_R2_mod = data_R2.drop(['T3_6h_R2'],axis = 1)
 data_R2_mod = sm.add_constant(data_R2_mod)
 regmulti2 = sm.OLS(data_T3_6h_R2,data_R2_mod)
 results2 = regmulti2.fit()
 print(results2.summary())
 ```
-
 
 ```{r include=FALSE}
 reg.mul_complet <- lm(T3_6h_R2 ~ ., data = R2)
@@ -1132,7 +1123,6 @@ data_sous_mod_sm = sm.add_constant(data_sous_mod)
 regmulti_sous = sm.OLS(data_T3_6h_R2,data_sous_mod_sm)
 results_sous = regmulti_sous.fit()
 ```
-
 
 ```{r, echo = F, fig.cap="\\label{fig:selection2}Selection de variable sur tous les traitement selon le critère BIC et la méthode backward", fig.height=3.5}
 choix=regsubsets(T3_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "backward")
@@ -1152,13 +1142,10 @@ choix=regsubsets(T3_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "forward
 plot(choix,scale = "adjr2")
 ```
 
-D'après la figure \ref{fig:selection2} (et les autres figures qui ont été réalisé sur le R-markdown), on trouve que :
-\newline
-- On sélectionne les variables suivantes pour T1: 1h, 3h, 5h, 6h, pour T2: 1h, 3h, 5h, 6h et pour T3: 5h. Cela rejoint l'analyse descriptive précedente : les gènes qui ont eu le traitement T2 ou le traitemet T3 ont des comportements similaires. 
-\newline
-- On retrouve, par ailleurs, les résultats de l'analyse de la figure \ref{fig:selection1} puisque les heures les plus influentes sont les heures les plus proches de 6h.
+D'après la figure \ref{fig:selection2} (et les autres figures qui ont été réalisé sur le R-markdown), on trouve que : \newline - On sélectionne les variables suivantes pour T1: 1h, 3h, 5h, 6h, pour T2: 1h, 3h, 5h, 6h et pour T3: 5h. Cela rejoint l'analyse descriptive précedente : les gènes qui ont eu le traitement T2 ou le traitemet T3 ont des comportements similaires. \newline - On retrouve, par ailleurs, les résultats de l'analyse de la figure \ref{fig:selection1} puisque les heures les plus influentes sont les heures les plus proches de 6h.
 
 \newpage
+
 On cherche maintenant à valider ce sous-modèle en comparant avec le modèle de départ :
 
 ```{r, echo = F, fig.cap="\\label{fig:testSM1}Test de sous modèle du modèle complet contre le modèle après sélection de variables"}
@@ -1171,7 +1158,6 @@ anova(mod.fin,mod.debut)
 anovaResults = anova_lm(results_sous,results2)
 print(anovaResults)
 ```
-
 
 La p-valeur est égale 0.2798 et est supérieure à 0.05, on ne rejette don pas H0 au risque de 5%, on accepte donc le sous modèle.
 
@@ -1196,18 +1182,11 @@ fitlasso <- glmnet(tildeX, tildeY, alpha = 1, family=c("gaussian"), intercept=F)
 plot_glmnet(fitlasso,label = 8)
 ```
 
-On voit que les variables les plus affectantes sont: 
--T1: 1h, 3h, 5h 
--T2: 3h, 4h, 5h, 6h 
--T3: 5h
-\newpage
+On voit que les variables les plus affectantes sont: -T1: 1h, 3h, 5h -T2: 3h, 4h, 5h, 6h -T3: 5h \newpage
 
 ## Modèle linéaire généralisé
 
-On veut chercher les variables prédictives qui permettent de discriminer les gènes sur-exprimés (Y\>1) des gènes sous-exprimés (Y\<-1) à 6h pour le traitement T3.
-\newline
-La sortie est binaire, nous allons donc chercher les variables prédictives par une régression logistique sur le réplicat 2 uniquement (puisque nous avions montré précedemment que le réplicat 1 était similaire en comportement au réplicat 2).
-
+On veut chercher les variables prédictives qui permettent de discriminer les gènes sur-exprimés (Y\>1) des gènes sous-exprimés (Y\<-1) à 6h pour le traitement T3. \newline La sortie est binaire, nous allons donc chercher les variables prédictives par une régression logistique sur le réplicat 2 uniquement (puisque nous avions montré précedemment que le réplicat 1 était similaire en comportement au réplicat 2).
 
 ```{r, echo = F}
 T36HR2_binomial = R2 # Toutes les variables du réplicat 2
@@ -1220,9 +1199,7 @@ glm.T36HR2<-glm(T36HR2_binomial$T3_6h_R2~., data=T36HR2_binomial,family=binomial
 summary(glm.T36HR2)
 ```
 
-En prenant en compte toutes les variables, le modèle linéaire généralisé n'arrive pas à bien ajuster le modèle. On remarque que toutes les pvaleurs sont égales à 1.
-\newline
-Ceci est probablement dû au fait que les variables sont très liées les unes aux autres.
+En prenant en compte toutes les variables, le modèle linéaire généralisé n'arrive pas à bien ajuster le modèle. On remarque que toutes les pvaleurs sont égales à 1. \newline Ceci est probablement dû au fait que les variables sont très liées les unes aux autres.
 
 ```{r include=F, echo = F}
 step.backward <- step(glm.T36HR2, trace=F)
@@ -1235,10 +1212,7 @@ Cependant, d'après la table lorsqu'on fait une sélection de variable "backward
 stepAIC(glm.T36HR2, direction=c("forward"),p=2, trace=F) # AIC
 ```
 
-
-Peut importe les combinaisons de traitement qu'on prend en pour expliquer T3_6h_R2, on obtient la même erreur (des pvaleurs toutes égales à 1) sauf lorsqu'on prend seulement le traitement 1. 
-\newline
-Dans ce cas, on obtient que T3_6h_R2 s'explique par T1_1h_R2, T1_2h_R2, T1_3h_R2, T1_4h_R2, T1_6h_R2 par une sélection de variable "backward".
+Peut importe les combinaisons de traitement qu'on prend en pour expliquer T3_6h_R2, on obtient la même erreur (des pvaleurs toutes égales à 1) sauf lorsqu'on prend seulement le traitement 1. \newline Dans ce cas, on obtient que T3_6h_R2 s'explique par T1_1h_R2, T1_2h_R2, T1_3h_R2, T1_4h_R2, T1_6h_R2 par une sélection de variable "backward".
 
 ```{r, echo = F}
 T1 = data[grep("T1", names(data), value=TRUE)]
@@ -1258,9 +1232,8 @@ step.backward <- step(glm.T1R2_T3_6h_R2, trace=F)
 summary(step.backward)
 ```
 
+# Etude de l'expression des gènes pour le traitement T1 à 6h
 
-
-# Etude de l'expression des gènes pour le traitement T1 à 6h 
 Nous allons dans cette partie étudier l'expression des gènes pour le traitement T1 à 6h. Nous allons notamment repérer les temps influent l'expression de ces gènes ainsi que les variables prédictives qui permettent de discriminer les gènes sur-exprimés des gènes sous-exprimés, à 6h pour le traitement T1.
 
 ## Modèle linéaire
@@ -1294,6 +1267,7 @@ plot(choix,scale = "adjr2")
 choix=regsubsets(T1_6h_R2~., data = T1R2, nbest = 1, nvmax = 5, method = "forward")
 plot(choix,scale = "adjr2")
 ```
+
 On a réalisé notre sélection de variables avec tous les critères (BIC, adjr2, Cp) et avec les méthodes forward et backward. Nous avons eu les mêmes résultats :
 
 On garde toutes les variables sauf T1_1h_R2.
@@ -1333,16 +1307,12 @@ choix=regsubsets(T1_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "forward
 plot(choix,scale = "adjr2")
 ```
 
-
-D'après la figure \ref{fig:selection4} (et les autres figures qui ont été réalisé sur le R-markdown), on trouve que :
-\newline
-- On sélectionne les variables suivantes pour T1: 1h, 2h, 3h, 4h, 5h, 6h, pour T2: 1h, 2h, 3h, 6h et pour T3: 1h, 5h, 6h.  
-\newline
-- On retrouve, par ailleurs, les résultats de l'analyse de la figure \ref{fig:selection3} puisque les heures les plus influentes sont les heures les plus proches de 6h.
+D'après la figure \ref{fig:selection4} (et les autres figures qui ont été réalisé sur le R-markdown), on trouve que : \newline - On sélectionne les variables suivantes pour T1: 1h, 2h, 3h, 4h, 5h, 6h, pour T2: 1h, 2h, 3h, 6h et pour T3: 1h, 5h, 6h.\
+\newline - On retrouve, par ailleurs, les résultats de l'analyse de la figure \ref{fig:selection3} puisque les heures les plus influentes sont les heures les plus proches de 6h.
 
 \newpage
-On cherche maintenant à valider ce sous-modèle en comparant avec le modèle de départ :
 
+On cherche maintenant à valider ce sous-modèle en comparant avec le modèle de départ :
 
 ```{r, echo = F}
 mod.debut = lm(T1_6h_R2 ~ ., data = R2)
@@ -1371,8 +1341,7 @@ On voit que les variables les plus affectantes sont ??
 
 ## Modèle linéaire généralisé
 
-On veut chercher les variables prédictives qui permettent de discriminer les gènes sur-exprimés (Y\>1), les gènes sous-exprimés (Y\<-1), et les gènes non-exprimés à 6h pour le traitement T1.
-\newline
+On veut chercher les variables prédictives qui permettent de discriminer les gènes sur-exprimés (Y\>1), les gènes sous-exprimés (Y\<-1), et les gènes non-exprimés à 6h pour le traitement T1. \newline
 La sortie est binaire, nous allons donc chercher les variables prédictives par une régression logistique sur le réplicat 2 uniquement (puisque nous avions montré précedemment que le réplicat 1 était similaire en comportement au réplicat 2).
 
 ```{r, echo = F}
@@ -1396,4 +1365,3 @@ summary(step.backward)
 ```
 
 En faisant une sélection de modèle en mode "backward" on peut exprimer T1_6h_R2 par : T1_3h_R2, T1_4h_R2, T1_5h_R2, T2_2h_R2, T2_5h_R2, T3_1h_R2, T3_5h_R2, T3_6h_R2
-
