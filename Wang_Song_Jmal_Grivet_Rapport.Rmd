@@ -69,6 +69,8 @@ library(cluster)
 library(clusterSim)
 library(reshape)
 library(mclust)
+library(circlize)
+library(plotmo)
 ```
 
 ```{python include=FALSE}
@@ -78,6 +80,24 @@ import matplotlib.pyplot as plt
 import plotly.express as px
 import sklearn as sk
 import seaborn as sns
+import seaborn as sns
+import plotly.express as px
+import statsmodels.api as sm
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+from sklearn.cluster import KMeans
+from sklearn.metrics.cluster import adjusted_rand_score
+from sklearn.metrics import silhouette_samples, silhouette_score
+from sklearn_extra.cluster import KMedoids
+from sklearn.neighbors import NearestNeighbors
+from scipy.cluster.hierarchy import dendrogram, linkage
+from sklearn.metrics import silhouette_score
+from yellowbrick.cluster import SilhouetteVisualizer
+from yellowbrick.cluster import KElbowVisualizer
+from sklearn.mixture import GaussianMixture as GMM
+from sklearn.metrics import adjusted_rand_score
+from sklearn.cluster import AgglomerativeClustering
+from statsmodels.stats.anova import anova_lm
 ```
 
 ```{r, echo = F}
@@ -210,6 +230,8 @@ res.pca = PCA(data, ncp=15, graph=F)
 summary(res.pca)
 ```
 
+
+
 ```{r, echo = F,fig.cap="\\label{fig:variancepercentage}Variance expliquée cumulée (en %) des différentes composantes principales", fig.height=3}
 barplot(cumsum(res.pca$eig[, "percentage of variance"]))
 abline(h=95, col="blue")
@@ -218,6 +240,34 @@ abline(h=99, col="red")
 
 ```{r include=FALSE}
 cumsum(res.pca$eig[, "percentage of variance"])
+```
+
+```{python, include = F}
+data_scale = StandardScaler().fit_transform(datapy) 
+
+feat_cols = ['feature'+str(i) for i in range(data_scale.shape[1])]
+normalised_data = pd.DataFrame(data_scale,columns=feat_cols)
+pca = PCA()
+principalComponents = pca.fit_transform(normalised_data)
+
+acp = pca.fit(data_scale)
+eig = pd.DataFrame({
+    "Dimension" : ["Dim" + str(x + 1) for x in range(36)], 
+    "Variance expliquée" : pca.explained_variance_,
+    "% variance expliquée" : np.round(pca.explained_variance_ratio_ * 100),
+    "% cum. var. expliquée" : np.round(np.cumsum(pca.explained_variance_ratio_) * 100)
+    }
+)
+
+plt.plot(pca.explained_variance_)
+plt.xlabel('nombre de composantes')
+plt.grid()
+plt.title('percentage of variance')
+
+plt.plot(np.round(np.cumsum(pca.explained_variance_ratio_) * 100))
+plt.xlabel('nombre de composantes')
+plt.grid()
+plt.title('sum of percentage of variance')
 ```
 
 D'après le graphique \ref{fig:variancepercentage}, on note que : 
@@ -234,7 +284,33 @@ g2 = fviz_pca_var(res.pca, col.var=col_trait) + scale_color_gradient2(low="blue"
 grid.arrange(g1,g2,ncol=2)
 ```
 
+```{python, include = F}
+fig = px.box(data_scale)
+fig.show()
 
+coord1=pca.components_[0]*np.sqrt(pca.explained_variance_[0])
+coord2=pca.components_[1]*np.sqrt(pca.explained_variance_[1])
+fig = plt.figure(figsize=(5,5))
+ax = fig.add_subplot(1, 1, 1)
+for i, j, nom in zip(coord1,coord2, datapy.columns):
+    plt.text(i, j, nom)
+    plt.arrow(0,0,i,j,color='black')
+plt.axis((-1.2,1.2,-1.2,1.2))
+# cercle
+c=plt.Circle((0,0), radius=1, color='gray', fill=False)
+ax.add_patch(c)
+plt.show()
+```
+
+```{python, include = F}
+data_acp = acp.transform(datapy)
+data_acp_df = pd.DataFrame(data_acp)
+plt.scatter(data_acp[:,0], data_acp[:,1])
+plt.xlabel("Dimension 1 ") # modification du nom de l'axe X
+plt.ylabel("Dimension 2 ") # idem pour axe Y
+plt.suptitle("Premier plan factoriel ") # titre général
+plt.show()
+```
 
 ```{r include=FALSE, echo = F}
 # Pourcentage des variables dans la construction des dimensions 1 et 2 :
@@ -258,11 +334,47 @@ res.pca.transpose$eig
 summary(res.pca.transpose)
 ```
 
+```{python figure = F}
+data_transpose = datapy.T
+data_transpose_scale = StandardScaler().fit_transform(data_transpose)
+pca_transpose = PCA()
+acp_transpose = pca_transpose.fit(data_transpose_scale)
+eig_transpose = pd.DataFrame(
+    {
+        "Dimension" : ["Dim" + str(x + 1) for x in range(36)], 
+        "Variance expliquée" : pca_transpose.explained_variance_,
+        "% variance expliquée" : np.round(pca_transpose.explained_variance_ratio_ * 100),
+        "% cum. var. expliquée" : np.round(np.cumsum(pca_transpose.explained_variance_ratio_) * 100)
+    }
+)
+
+```
+
+```{python include = F}
+plt.plot(pca_transpose.explained_variance_)
+plt.xlabel('nombre de composantes')
+plt.grid()
+plt.title('percentage of variance')
+
+plt.plot(np.round(np.cumsum(pca_transpose.explained_variance_ratio_) * 100))
+plt.xlabel('nombre de composantes')
+plt.grid()
+plt.title('sum of percentage of variance')
+```
+
+
 ```{r, echo = F, fig.cap="\\label{fig:variancepercentage2}Variance expliquée cumulée (en %) des différentes composantes principales", fig.height=3}
 barplot(cumsum(res.pca.transpose$eig[, "percentage of variance"]))
 abline(h=95, col="blue")
 abline(h=99, col="red")
 ```
+```{python include = F}
+eig_transpose.plot.bar(x = "Dimension", y = "% cum. var. expliquée") # permet un diagramme en barres
+plt.text(5, 18, "17%") # ajout de texte
+plt.axhline(y = 17, linewidth = .5, color = "dimgray", linestyle = "--") # ligne 17 = 100 / 6 (nb dimensions)
+plt.show()
+```
+
 
 D'après le graphique \ref{fig:variancepercentage2}, on note que : 
 \newline
@@ -281,6 +393,32 @@ g1 = fviz_pca_var(res.pca.transpose, col.var=data$T3_6h_R2, label="none") + scal
 g2 = fviz_pca_ind(res.pca.transpose, axes=c(1, 2), autoLab="yes", col.ind=col_trait) + scale_color_gradient2(low="blue", mid="black", high="red", midpoint=2)
 grid.arrange(g1,g2,ncol=2)
 ```
+```{python include = F}
+coord1=pca_transpose.components_[0]*np.sqrt(pca_transpose.explained_variance_[0])
+coord2=pca_transpose.components_[1]*np.sqrt(pca_transpose.explained_variance_[1])
+fig = plt.figure(figsize=(5,5))
+ax = fig.add_subplot(1, 1, 1)
+for i, j, nom in zip(coord1,coord2, datapy.columns):
+    plt.text(i, j, nom)
+    plt.arrow(0,0,i,j,color='black')
+plt.axis((-1.2,1.2,-1.2,1.2))
+# cercle
+c=plt.Circle((0,0), radius=1, color='gray', fill=False)
+ax.add_patch(c)
+plt.show()
+```
+
+```{python include = F}
+data_acp_transpose = acp_transpose.transform(data_transpose)
+data_acp_transpose_df = pd.DataFrame(data_acp_transpose)
+data_acp_transpose[:,0:3]
+plt.scatter(data_acp_transpose[:,0], data_acp_transpose[:,1])
+plt.xlabel("Dimension 1 ") # modification du nom de l'axe X
+plt.ylabel("Dimension 2 ") # idem pour axe Y
+plt.suptitle("Premier plan factoriel ") # titre général
+plt.show()
+```
+
 
 Commentaires à faire
 
@@ -296,6 +434,30 @@ data = read.delim("Data_Etudiants_2023.txt",header=TRUE, sep=";")
 res.pca.transpose = PCA(t(data), scale.unit = TRUE, ncp=15, graph=F)
 res.pca.transpose$eig[1:5,3]
 coord = (res.pca.transpose$ind$coord)[,1:3] # on prend les premières 3 composantes principales qui résument 90% d'information
+```
+
+```{python, echo = F, include = F}
+data = pd.read_csv("Data_Etudiants_2023.txt", sep=";")
+scaler = StandardScaler();
+
+data_transforme = data.T
+scaler.fit(data_transforme);
+data_transforme = scaler.transform(data_transforme)
+
+pca = PCA(n_components = 10)
+pca.fit(data_transforme)
+acp = pca.fit_transform(data_transforme)
+
+
+```
+
+```{python, echo = F, include = F}
+np.cumsum(pca.explained_variance_ratio_)
+```
+
+```{python, echo = F, include = F}
+# 3 composantes explique 90% d'inertie
+coord = pd.DataFrame(acp[:,0:3],columns = ['Dim 1', 'Dim 2', 'DIm 3'])
 ```
 
 
@@ -317,7 +479,21 @@ df<-data.frame(K=2:Kmax,Iintra=Iintra)
 ggplot(df,aes(x=K,y=Iintra))+geom_line()+geom_point()+xlab("Nombre de classes")+ylab("Inertie intraclasse")
 ```
 
-```{r, echo =F, eval=F}
+```{python, include = F, echo = F}
+InertieIntra = []
+for k in range(2, 10):
+    kmeans = KMeans(n_clusters=k,init = 'k-means++', max_iter = 300, n_init = 10, random_state = 0);
+    kmeans.fit(coord);
+    InertieIntra.append(kmeans.inertia_);
+    
+aux = pd.DataFrame({"K" : range(2, 10),
+                    "InertieIntra" : InertieIntra})
+fig = px.line(aux, x='K', y='InertieIntra',labels={'x':'Number of clusters', 'y':'Inertie Intra'},markers=True)
+fig.show()
+```
+
+
+```{r, echo =F, include=F}
 ## silhouette
 library(cluster)
 Silhou<-NULL
@@ -331,14 +507,49 @@ ggplot(df,aes(x=K,y=Silhouette))+
   geom_line()+theme(legend.position = "bottom")
 ```
 
+```{python, echo = F, include = F}
+silhouette_coefficients = []
+for k in range(2, 10):
+    kmeans = KMeans(n_clusters=k,init = 'k-means++', max_iter = 300, n_init = 10, random_state = 0);
+    kmeans.fit(coord);
+    score = silhouette_score(coord, kmeans.labels_);
+    silhouette_coefficients.append(score);
+
+aux = pd.DataFrame({"K" : range(2, 10),
+                    "Silhouette" : silhouette_coefficients})
+fig = px.line(aux, x='K', y='Silhouette',labels={'x':'Number of clusters', 'y':'Silhouette'},markers=True)
+fig.show() 
+```
+
 On voit sur la figure \ref{fig:intraclasse} qu'il y a un coude pour K = 3. On retient donc 3 classes. Nous avons aussi appliqué sur le Rmd le critère silhouette, qui lui nous as donné un pic à K = 2, soit 2 classes.
 \newline
 On a représenté sur la figure \ref{fig:kmeans2} les résultats de kmeans sur les 2 premières composantes principales de l'ACP.
 
 ```{r, echo = F, fig.cap="\\label{fig:kmeans2}Résultat du clustering Kmeans sur les 2 axes de l'ACP",fig.height=3}
-km = kmeans(coord, centers = 3)
+km = kmeans(coord, centers = 2)
 fviz_cluster(km,data=coord,axes = c(1,2), ellipse.type="norm",labelsize=8,geom=c("point","text"))+ggtitle("")
 ```
+
+```{python, echo = F, include = F}
+# on retient 3 classes
+kmeans = KMeans(n_clusters = 2, init = 'k-means++', max_iter = 300, n_init = 10, random_state = 0)
+kmeans.fit(coord)
+
+# Représentation dans le premier plan de l’ACP :
+pca_df = pd.DataFrame({
+    "Dim1" : acp[:,0], 
+    "Dim2" : acp[:,1],
+    "Kmeans3" : pd.Categorical(kmeans.labels_)
+})
+fig = px.scatter(pca_df,x="Dim1", y="Dim2", color="Kmeans3", symbol="Kmeans3")
+fig.show()
+```
+
+```{python, echo = F, include = F}
+# effectifs par classe
+pd.crosstab(kmeans.labels_,"freq")
+```
+
 
 On remarque que le cluster 1 regroupe les traitements T2 et T3 du réplicat R1/R2 à 1h et le traitement T1 du réplicat R1/R2 pour toute les heures. Le cluster 2 regoupe les traitements T2 et T3 de 2h et 3h, Le cluster 3 regroupe quant à lui tous les traitements de 4h à 6h.
 \newline
@@ -355,8 +566,15 @@ aux<-silhouette(km$cluster, daisy(coord))
 fviz_silhouette(aux)
 ```
 
+```{python, echo = F, include = F}
+kmeansopt = KMeans(2,init = 'k-means++', max_iter = 300, n_init = 10, random_state = 0);
+visualizer = SilhouetteVisualizer(kmeansopt, colors='yellowbrick');
+visualizer.fit(coord)
+```
+
+
 ### PAM
-On visualise le nombre de classes optimal par le critère Silhouette avec l’algorithme PAM:
+On visualise le nombre de classes optimal par le critère Silhouette avec l’algorithme PAM.
 ```{r, echo = F, fig.cap="\\label{fig:silhouette2}Critère silhouette en fonction du nombre de classe", fig.height=3}
 Kmax<-10
 resPAMcl<-matrix(0,nrow=nrow(coord),ncol=Kmax-1)
@@ -385,25 +603,18 @@ Effectuons maintenant une classification hiérarchique avec la mesure d'agregati
 
 ```{r, echo =F, fig.height=3}
 d = dist(coord)
-hclustsingle<-hclust(d, method = "single") # la distance euclidienne entre les points
-hclustcomplete<-hclust(d, method = "complete")
-hclustaverage<-hclust(d, method = "average")
 hward<-hclust(d,method="ward.D2")
 ```
 
-On visualise l'hauteur du dendogramme avec la mésure d'agrégation de Ward.
-```{r, echo = F, fig.cap="\\label{fig:Ward}Résultat du clustering Kmeans sur les 2 axes de l'ACP",fig.height=3}
-Kmax <- 20
-df <- data.frame(K = 1:Kmax, height = sort(hclustaverage$height, decreasing = T)[1:Kmax])
-ggplot(df, aes(x = K, y = height)) + geom_line() + geom_point()
+```{python, echo = F, fig.cap="\\label{fig:dendogram}Dendogramme de nos données avec classification hiérarchique avec la mesure d'agrégation de Ward", fig.height=2}
+hward=linkage(coord,method='ward')
+dendrogram(hward,no_labels=True,color_threshold=0);  
+plt.show()
 ```
 
 
-D'après la figure \ref{fig:Ward}, on voit qu'il y a un saut en k = 3 ou 6 puis la courbe s'aplanit, on retient donc 3 ou 6 classes.
 
-On a également essayé dans le Rmd de déterminer le nombre de classes à retenir avec l’indice de Calinski_Harabasz mais cela n'a pas marché. On voit que plus k est grand, plus l'indice Calinski-Harabasz augmente, il n'y a pas de pic sur la courbe, donc on peut pas déterminer une classification avec le critère Calinski-Harabasz.
-
-```{r, echo = F,  fig.cap="\\label{fig:calinski}Indice de Calinski-Harabasz en fonction du nombre de classe", fig.height=3}
+```{r, echo = F,  fig = F, fig.cap="\\label{fig:calinski}Indice de Calinski-Harabasz en fonction du nombre de classe", fig.height=3}
 
 CH <- NULL
 Kmax <- 20
@@ -414,6 +625,31 @@ daux <- data.frame(NbClust = 2:Kmax, CH = CH)
 ggplot(daux, aes(x = NbClust, y = CH)) + geom_line() + geom_point()
 ```
 
+On détermine le nombre de classes à retenir avec l’indice de Calinski_Harabasz figure \ref{fig:calinski}. Il y a un pic pour K = 3, on retient donc 3 classes.
+```{python, echo = F,  fig.cap="\\label{fig:calinski2}Indice de Calinski-Harabasz en fonction du nombre de classe", fig.height=3}
+
+model = AgglomerativeClustering()
+visualizer = KElbowVisualizer(model, k=(2,10), metric="calinski_harabasz",timings=False);
+visualizer.fit(coord)
+```
+
+```{python, echo = F, include = F}
+# on retient donc 2 ou 3 classe selon les deux indices
+# on prend 3 classes par exemple
+modelfin = AgglomerativeClustering(n_clusters=3, affinity='euclidean', linkage='ward')
+modelfin.fit(coord)
+```
+
+```{python, echo = F, include = F}
+# représentation dans les plans de l'ACP
+pca_df = pd.DataFrame({
+    "Dim1" : acp[:,0], 
+    "Dim2" : acp[:,1],
+    "CAH" : pd.Categorical(modelfin.labels_)
+})
+fig=px.scatter(pca_df,x="Dim1", y="Dim2",color="CAH")
+fig.show()
+```
 
 On trace maintenant la distribution des variables en fonction de la classification en 3 classes avec la mésure d'agrégation Ward.
 
@@ -424,17 +660,62 @@ df<-melt(df,id="Class")
 ggplot(df,aes(x=variable,y=value))+geom_violin(aes(fill=Class))
 ```
 
-Modèle mélange avec BIC:
-```{r, echo = F,fig.height=3}
+```{python, echo = F, include = F} 
+# la distribution en fonction de la classification
+aux=coord.assign(Clust=modelfin.labels_)
+sm = aux.melt(id_vars='Clust')
+fig=px.box(sm,x="Clust",y="value",facet_col="variable",facet_col_wrap=3,color="Clust")
+fig.show()
+```
+
+\newpage
+#### Modèle de mélange 
+
+BIC : figure \ref{fig:bic}
+```{r, echo = F, fig.cap="\\label{fig:bic}Modèle de mélange BIC", fig.height=3}
 resBICdiag <- Mclust(coord, G = 2:10)
 fviz_mclust(resBICdiag, what = "BIC")
 ```
 
-Modèle mélange avec ICL:
-```{r, echo=F, fig.height=3}
+ICL : figure \ref{fig:icl3}
+```{r, echo=F,fig.cap="\\label{fig:icl3}Modèle de mélange ICL", fig.height=3}
 resICL <- mclustICL(coord, G = 2:10)
 summary(resICL)
 ```
+
+```{python, echo = F, include = F}
+Kmax = 10
+K_components = np.arange(2, Kmax)
+
+models = [GMM(K, covariance_type='full', random_state=0).fit(coord) for K in K_components]
+
+BIC=[m.bic(coord) for m in models]
+AIC=[m.aic(coord) for m in models]
+ICL = [m.bic(coord) - (2*sum(np.log( np.max(m.predict_proba(coord),1) ))) for m in models]
+
+crit = pd.DataFrame({
+    "K" : np.arange(2, Kmax),
+    "BIC" : BIC, 
+    "AIC" : AIC,
+    "ICL" : ICL,
+})
+critdf=pd.melt(crit, id_vars=['K'], value_vars=['BIC', 'AIC', 'ICL'])
+
+fig = px.line(critdf, x='K', y='value', color='variable')
+fig.show()
+```
+
+```{python, echo = F, include = F}
+# selon les 3 critères, on retient 9 classes, (ce qui n'a pas l'air correct ?
+BIC=[m.bic(coord) for m in models]
+u=np.argmin(BIC)
+probapost = models[u].predict_proba(coord)
+labels=models[u].fit_predict(coord)   
+probamax=[np.max(probapost[x,:]) for x in range(len(coord))]
+
+pd.crosstab(labels,"freq")
+```
+
 
 Si on retient 3 classes: CAH, modèle de mélange BIC et ICL donnent le même résultat de classification selon ARI = 1:
 ```{r, echo = F, fig.height=3}
@@ -447,43 +728,64 @@ adjustedRandIndex(resBIC$classification,ClassK3)
 
 On visualise les 3 clusters en boxplot des probabilité d'appartenance et dans le plan de l'ACP:
 
-```{r, echo = F,fig.height=3}
+```{r, echo = F,fig.cap="\\label{fig:appartenance}Boxplots des probabilités d'appartenance", fig.height=3}
 Aux <- data.frame(label = paste("Cl", resICL$classification, sep = ""), proba = apply(resICL$z,
     1, max))
-h1 <- ggplot(Aux, aes(x = label, y = proba)) + geom_boxplot()
-h2 <- fviz_cluster(resICL, data = Data, ellipse.type = "norm", geom = "point") +
+ggplot(Aux, aes(x = label, y = proba)) + geom_boxplot()
+```
+Tous les individus ont bien été classé dans chacun des classes car les boxplots sont aplati à 1. 
+
+```{r,echo = F, fig.cap="\\label{fig:pca2} Visualisation des 3 clusters sur le plan de l'ACP", fig.height=3}
+fviz_cluster(resICL, data = Data, ellipse.type = "norm", geom = "point") +
     ggtitle("") + theme(legend.position = "none")
-grid.arrange(h1, h2, ncol = 2)
 ```
 
-On compare les deux classifications: k = 2 avec kmeans et k=3 avec CAH ward:
-```{r, echo = F,fig.height=3}
-library(circlize)
+On compare les deux classifications: k = 2 avec kmeans et k=3 avec CAH Ward:
+```{r, echo = F,fig.cap="\\label{fig:chord}Diagramme de Chord entre les clusters de Kmeans et les clusters de CAH Ward",fig.height=3}
+
 clust1<-paste("Kmeans-",km$cluster,sep="")
 clust2<-paste("CAH3-",cutree(hward,3),sep="")
 table(clust1,clust2)
 chordDiagram(table(clust1,clust2))
 ```
-On voit que le cluster 1 de k-means égale à cluster 2 et 3 de CAH, qui représente 2h et 3h du traitement T2/T3 du réplicat R1/R2. Les gènes du traitemetns T2/T3 dans les heures aux milieux(2h, 3h) ont donc des comportements différents que l'heure débutante(1h) et heures finales(5h,6h), ce qui correspond à l'analyse précédante. 
+On voit que le cluster 1 de k-means est égale aux cluster 2 et 3 de CAH, qui représente 2h et 3h du traitement T2/T3 du réplicat R1/R2. Les gènes du traitemetns T2/T3 dans les heures aux milieux(2h, 3h) ont donc des comportements différents que l'heure débutante(1h) et heures finales(5h,6h), ce qui correspond à l'analyse précédante. 
 
 ## Obtention d’une classification des gènes ayant des profils d’expression similaires (co-exprimés) dans les différentes conditions
 
-On travaille avec les données non transposé pour la classification des gènes:
+On travaille avec les données non transposé pour la classification des gènes.
 
-```{r, echo = F, fig.height=3}
+```{r, echo = F, include = F, fig.height=3}
 res.pca = PCA(data, ncp=15, scale.unit = TRUE, graph=F)
 res.pca$eig[1:7,3]
 coord2 = (res.pca$ind$coord)[,1:7] # 90% d'inertie
 ```
 
-```{r,echo = F,  fig.height=3}
-fviz_nbclust(coord2, FUNcluster = kmeans, method = "silhouette")
+```{python, echo = F, include = F}
+data = pd.read_csv("Data_Etudiants_2023.txt", sep=";")
+scaler = StandardScaler();
+scaler.fit(data);
+data = scaler.transform(data)
+pca = PCA(n_components = 10)
+pca.fit(data)
+acp = pca.fit_transform(data)
+coord2 = pd.DataFrame(acp[:,0:7],columns = ['Dim 1', 'Dim 2', 'Dim 3', 'Dim 4', 'Dim 5', 'Dim 6', 'Dim 7'])
+```
+### k-means
+Implementons l'algorithme K-means.
+\newline
+Commençons par déterminer le nombre de classe optimal. Nous avons implémenté sur la figure \ref{fig:gapstat} le gap statistic en fonction du nombre de classe. On trouve un pic pour K = 2. On choisi donc 2 classes. La méthode silhouette et la méthode des coudes (inertie intraclasse) ont également été implémenté sur le Rmd et nous donnent le même résultat.
+
+```{r,echo = F, fig.cap="\\label{fig:gapstat}Gap statistique en fonction du nombre de cluster", fig.height=3}
 fviz_nbclust(coord2, FUNcluster = kmeans, method = "gap_stat")
+```
+
+```{r,echo = F, include = F}
+fviz_nbclust(coord2, FUNcluster = kmeans, method = "silhouette")
 fviz_nbclust(coord2, FUNcluster = cluster::pam, method = "silhouette")
 ```
 
-### k-means
-```{r, echo = F, fig.height=3}
+
+```{r, echo = F, include = F}
 set.seed(12345)
 Kmax <- 20
 reskmeans <- matrix(0, nrow = nrow(coord2), ncol = (Kmax - 1))
@@ -507,38 +809,93 @@ g2 <- ggplot(df, aes(x = K, y = Silhou)) + geom_line() + geom_point() + xlab("No
 grid.arrange(g1, g2, ncol = 2)
 ```
 
-On retient 2 classes avec k-means, on visualise la classification obtenue sur le plan de l'ACP:
-```{r, echo = F, fig.height=3}
+```{python,echo = F, include = F}
+InertieIntra = []
+for k in range(2, 10):
+    kmeans = KMeans(n_clusters=k,init = 'k-means++', max_iter = 300, n_init = 10, random_state = 0);
+    kmeans.fit(coord2);
+    InertieIntra.append(kmeans.inertia_);
+    
+aux = pd.DataFrame({"K" : range(2, 10),
+                    "InertieIntra" : InertieIntra})
+fig = px.line(aux, x='K', y='InertieIntra',labels={'x':'Number of clusters', 'y':'Inertie Intra'},markers=True)
+fig.show()
+```
+
+```{python, echo = F, include = F}
+silhouette_coefficients = []
+for k in range(2, 10):
+    kmeans = KMeans(n_clusters=k,init = 'k-means++', max_iter = 300, n_init = 10, random_state = 0);
+    kmeans.fit(coord2);
+    score = silhouette_score(coord2, kmeans.labels_);
+    silhouette_coefficients.append(score);
+
+aux = pd.DataFrame({"K" : range(2, 10),
+                    "Silhouette" : silhouette_coefficients})
+fig = px.line(aux, x='K', y='Silhouette',labels={'x':'Number of clusters', 'y':'Silhouette'},markers=True)
+fig.show() 
+```
+
+
+```{r, echo = F, fig.cap="\\label{fig:acp5}Classification KMeans obtenue sur les gènes sur les axes de l'ACP", fig.height=3}
 reskmeans = kmeans(coord2,2)
 fviz_cluster(reskmeans,data=coord2,ellipse.type="norm",labelsize=8,geom=c("point"))+ggtitle("")
 fviz_pca_ind(res.pca, axes = c(1, 2), geom = c("point"), habillage = as.factor(reskmeans$cluster))
 ```
-L'axe 1 de l'ACP sépare bien les deux clusters.
 
-### CAH 
+On visualise la classification obtenue sur le plan de l'ACP figure \ref{fig:acp5}. L'axe 1 de l'ACP sépare bien les deux clusters.
+```{python, echo = F, include = F}
+# on retient 2 classes
+kmeans = KMeans(n_clusters = 2, init = 'k-means++', max_iter = 300, n_init = 10, random_state = 0)
+kmeans.fit(coord2)
+# Représentation dans le premier plan de l’ACP :
+pca_df = pd.DataFrame({
+    "Dim1" : acp[:,0], 
+    "Dim2" : acp[:,1],
+    "Kmeans3" : pd.Categorical(kmeans.labels_)
+})
+fig = px.scatter(pca_df,x="Dim1", y="Dim2", color="Kmeans3", symbol="Kmeans3")
+fig.show()
 
-avec la mesure d'agrégation Ward
-```{r,echo = F,  fig.height=3}
+# effectifs par classe
+pd.crosstab(kmeans.labels_,"freq")
+```
+
+
+### Classification hiérarchique avec mesure de Ward
+
+Effectuons maintenant une classification hiérarchique des gènes avec la mesure d'agregation de Ward.
+
+```{python, echo = F, fig.cap="\\label{fig:dendogram3}Dendogramme des gènes avec classification hiérarchique avec la mesure d'agrégation de Ward", fig.height=2}
+hward=linkage(coord2,method='ward')
+dendrogram(hward,no_labels=True,color_threshold=0);  
+plt.show()
+```
+
+
+Afin de déterminer le nombre de classe optimal pour la classification hiérarchique, on trace la hauteur du dendogramme (fig \ref{fig:{dendogram3}}) en fonction du nombre de classe K. 
+```{r,echo = F, fig.cap="\\label{fig:height3}Hauteur du dendogramme en fonction de K", fig.height=3}
 Kmax <- 20
 resward <- hclust(dist(coord2, method = "euclidean"), method = "ward.D2")
 df <- data.frame(K = 1:Kmax, height = sort(resward$height, decreasing = T)[1:Kmax])
 ggplot(df, aes(x = K, y = height)) + geom_line() + geom_point()
 ```
-2 ou 3 class
+La figure \ref{ref:{height3}) nous donne 2 ou 3 classes. On retrouve le même résultat avec l'indice de  Calinski-Harabasz et l'indice Silhouette implémenté sur le Rmd.
 
-coupure avec la critère CH:
-```{r,echo = F,  fig.height=3}
-CH <- NULL
-Kmax <- 20
-for (k in 2:Kmax) {
-    CH <- c(CH, index.G1(coord2, cutree(resward, k)))
-}
-daux <- data.frame(NbClust = 2:Kmax, CH = CH)
-ggplot(daux, aes(x = NbClust, y = CH)) + geom_line() + geom_point()
+```{python, echo = F, include = F}
+# On détermine le nombre de classe avec indice de Calinski-Harabasz
+model = AgglomerativeClustering()
+visualizer = KElbowVisualizer(model, k=(2,10), metric="calinski_harabasz",timings=False);
+visualizer.fit(coord2)
+
+# avec indice Silhouette
+visualizer = KElbowVisualizer(model, k=(2,10), metric="silhouette",timings=False);
+visualizer.fit(coord2);
+visualizer.show()
 ```
-2 class
 
-Visualization avec 2 classes:
+
+Visualisation avec 2 classes:
 ```{r,echo = F,  fig.height=3}
 ClassK2 = cutree(resward,k=2)
 df<-data.frame(coord2,Class=as.factor(ClassK2))
@@ -546,8 +903,24 @@ df<-melt(df,id="Class")
 ggplot(df,aes(x=variable,y=value))+geom_violin(aes(fill=Class))
 ```
 
+```{python, echo = F, include = F}
+# on retient donc 2 classes selon les deux indices
+modelfin = AgglomerativeClustering(n_clusters=2, affinity='euclidean', linkage='ward')
+modelfin.fit(coord2)
+# effectifs par classe
+pd.crosstab(modelfin.labels_,"freq")
+# représentation dans les plans de l'ACP
+pca_df = pd.DataFrame({
+    "Dim1" : acp[:,0], 
+    "Dim2" : acp[:,1],
+    "CAH" : pd.Categorical(modelfin.labels_)
+})
+fig=px.scatter(pca_df,x="Dim1", y="Dim2",color="CAH")
+fig.show()
+```
 
 
+### Modèle de mélange 
 Modèle mélange avec BIC: ??
 ```{r,echo = F,  fig.height=3}
 resBICdiag <- Mclust(coord2, G = 2:10)
@@ -560,6 +933,29 @@ resICL <- mclustICL(coord2, G = 2:10)
 summary(resICL)
 ```
 
+```{python, echo = F, include = F}
+Kmax = 10
+K_components = np.arange(2, Kmax)
+
+models = [GMM(K, covariance_type='full', random_state=0).fit(coord2) for K in K_components]
+
+BIC=[m.bic(coord2) for m in models]
+AIC=[m.aic(coord2) for m in models]
+ICL = [m.bic(coord2) - (2*sum(np.log( np.max(m.predict_proba(coord2),1) ))) for m in models]
+
+crit = pd.DataFrame({
+    "K" : np.arange(2, Kmax),
+    "BIC" : BIC, 
+    "AIC" : AIC,
+    "ICL" : ICL,
+})
+critdf=pd.melt(crit, id_vars=['K'], value_vars=['BIC', 'AIC', 'ICL'])
+
+fig = px.line(critdf, x='K', y='value', color='variable')
+fig.show()
+```
+
+
 ```{r, echo = F, fig.height=3}
 modICL <- Mclust(coord2, G = 6, modelNames = "VVV")
 Aux <- data.frame(label = paste("Cl", modICL$classification, sep = ""), proba = apply(modICL$z,
@@ -568,10 +964,41 @@ ggplot(Aux, aes(x = label, y = proba)) + geom_boxplot()
 ```
 La classification n'a pas été bien faite, il y a beaucoup de outliers avec probabilité d'appartenance jusqu'à 50%.
 
+```{python, echo = F, include = F}
+# selon les critères BIC et ICL, on retient 6 classes
+u=np.argmin(BIC)
+probapost = models[u].predict_proba(coord2)
+labels=models[u].fit_predict(coord2)   
+probamax=[np.max(probapost[x,:]) for x in range(len(coord2))]
+
+# effectifs
+pd.crosstab(labels,"freq")
+
+# boxplot des probamax
+aux=pd.DataFrame({'probamax':probamax,'labels':labels},columns = ['probamax', 'labels'])
+fig = px.box(aux, x="labels", y="probamax")
+fig.show()
+
+```
+
+
 ```{r, echo = F, fig.height=3}
 df <- data.frame(coord2, Class = as.factor(modICL$classification))
 df <- melt(df, id = "Class")
 ggplot(df, aes(x = variable, y = value)) + geom_violin(aes(fill = Class))
+```
+
+```{python, echo = F, include = F}
+
+# On plot sur les 2 premiers plans de l'ACP
+df = pd.DataFrame({
+    "X" : coord2['Dim 1'],
+    "Y" : coord2['Dim 2'],
+    "labels" : pd.Categorical(labels)
+})
+df.labels=pd.Categorical(labels)
+fig = px.scatter(df,x="X", y="Y", color="labels", symbol="labels")
+fig.show()
 ```
 
 Transformation en data qualitative avec modalités -1, 0 et 1:
@@ -583,11 +1010,32 @@ data_quali[data_quali < -1] = -1
 data_quali[data_quali > -1 & data_quali < 1] = 0
 ```
 
+```{python, echo = F, include = F}
+# classification de k-means
+data = pd.read_csv("Data_Etudiants_2023.txt", sep=";")
+data_quali = data
+data_quali[data > 1] = 1
+data_quali[data < -1] = -1
+data_quali[(data > -1) & (data < 1)] = 0
+data_quali = pd.DataFrame(data = data_quali, columns = data.columns.values)
+```
+
+
 D'après analyse descriptive précedante, on sait que T3_6h_R2 possède que des gènes sur-exprimé et sous-exprimé, donc en comparant avec T3_6h_R2, on en déduit que les deux cluters qu'on a obtenu sépare les profils d’expression non-similaires (sur et sous-exprimé), qui veut dire regroupe les profils co-exprimés:
 ```{r, echo = F, fig.height=3}
 table(reskmeans$cluster,data_quali$T3_6h_R2)
 ```
 
+```{python, echo = F, include = F}
+# classification de k-means
+pd.crosstab(kmeans.labels_,data_quali["T3_6h_R2"])
+# classification hiérarchique avec critère silhouette
+pd.crosstab(modelfin.labels_,data_quali["T3_6h_R2"])
+# On compare ces deux modèles (K-means et CAH), ils sont très proches
+adjusted_rand_score(modelfin.labels_,kmeans.labels_)
+# classification modèle de mélange
+pd.crosstab(pd.Categorical(labels),data_quali["T3_6h_R2"])
+```
 
 \newpage
 
@@ -606,9 +1054,23 @@ T3 = data[grep("T3", names(data), value=TRUE)]
 T3R2 = T3[grep("R2", names(T3), value=TRUE)]
 ```
 
+```{python, include = F}
+data_T3_R2 = datapy[["T3_1h_R2","T3_2h_R2","T3_3h_R2","T3_4h_R2","T3_5h_R2"]]
+data_T3_6h_R2 = datapy["T3_6h_R2"] 
+type(data_T3_R2)
+```
+
+
 ```{r echo = F}
 reg.mul <- lm(T3_6h_R2 ~ ., data = T3R2)
 summary(reg.mul)
+```
+
+```{python, include = F}
+data_T3_R2 = sm.add_constant(data_T3_R2)
+regmulti = sm.OLS(data_T3_6h_R2,data_T3_R2)
+results = regmulti.fit()
+print(results.summary())
 ```
 
 Pour identifier les temps qui ont une réelle influence sur l'expression des gènes à ce stade nous effectuons une sélection de variable avec différents critères.
@@ -635,6 +1097,14 @@ On a réalisé notre sélection de variables avec tous les critères (BIC, adjr2
 
 On garde toutes les variables mais on observe quand même une gradation. Le temps précédent (5h) est le plus influent suivi du temps de démarrage (1h, 2h). On peut faire l'hypothèse d'une périodicité de temps sur l'influence des traitements sur les gènes. Il faudrait tester cette sélection de variable sur plus d'heures afin valider ou non cette hypothèse.
 
+```{python, include = F}
+print('SSR:', results.ssr)
+print('SSE:', results.ess)
+print('SST:', results.centered_tss)
+print('coefficient of determination:',round(float(results.rsquared),3))
+```
+
+
 ### Etude sur tous les traitements et tous les temps
 Réalisons maintenant la même étude mais cette fois ci sur tous les traitements et tous les temps.
 
@@ -642,9 +1112,25 @@ Réalisons maintenant la même étude mais cette fois ci sur tous les traitement
 R2 = data[grep("R2", names(data), value = TRUE)]
 ```
 
+```{python include = F}
+data_R2_mod = data_R2.drop(['T3_6h_R2'],axis = 1)
+data_R2_mod = sm.add_constant(data_R2_mod)
+regmulti2 = sm.OLS(data_T3_6h_R2,data_R2_mod)
+results2 = regmulti2.fit()
+print(results2.summary())
+```
+
+
 ```{r include=FALSE}
 reg.mul_complet <- lm(T3_6h_R2 ~ ., data = R2)
 summary(reg.mul_complet)
+```
+
+```{python, include = F}
+data_sous_mod = data_R2_mod[['T1_1h_R2','T1_3h_R2','T1_5h_R2','T1_6h_R2','T2_1h_R2','T2_3h_R2','T2_5h_R2','T2_6h_R2','T3_5h_R2']]
+data_sous_mod_sm = sm.add_constant(data_sous_mod)
+regmulti_sous = sm.OLS(data_T3_6h_R2,data_sous_mod_sm)
+results_sous = regmulti_sous.fit()
 ```
 
 
@@ -681,21 +1167,39 @@ mod.fin = lm(T3_6h_R2 ~ T1_1h_R2+T1_3h_R2+T1_5h_R2+T1_6h_R2+T2_1h_R2+T2_3h_R2+T2
 anova(mod.fin,mod.debut)
 ```
 
+```{python, include = F}
+anovaResults = anova_lm(results_sous,results2)
+print(anovaResults)
+```
+
+
 La p-valeur est égale 0.2798 et est supérieure à 0.05, on ne rejette don pas H0 au risque de 5%, on accepte donc le sous modèle.
 
 ### Lasso
 
 ```{r, echo = F, fig.height=3}
 lambda_seq=seq(0,1,0.001)
-x = model.matrix(T3_6h_R2~.,data=R2)
-y = data$T3_6h_R2
-fitlasso <- glmnet(x, y , alpha = 1, lambda = lambda_seq, family=c("gaussian"), intercept=F)
-plot(fitlasso,label= TRUE)
-abline(v = 0.7)
+tildeX = as.matrix(R2[,-18])
+tildeY = data$T3_6h_R2
+
+fitlasso <- glmnet(tildeX, tildeY, alpha = 1, label = lambda_seq, family=c("gaussian"), intercept=F)
+
+df=data.frame(tau = rep(-log(fitlasso$lambda), ncol(tildeX)), theta=as.vector(t(fitlasso$beta)), variable=rep(colnames(tildeX), each=length(fitlasso$lambda)))
+g1 = ggplot(df,aes(x=tau,y=theta,col=variable))+geom_line()+ylab("Estimator of theta")+xlab("-log(lambda)")+theme(legend.title = element_text(size = 5),legend.text = element_text(size = 3))
+g1
 ```
 
-On voit que les variables les plus affectantes sont les variables 13 et 18 soit T3_1h_R2, T3_6h_R2.
+```{r, echo = F, fig.height=3}
+tildeX = as.matrix(R2[,-18])
+tildeY = data$T3_6h_R2
+fitlasso <- glmnet(tildeX, tildeY, alpha = 1, family=c("gaussian"), intercept=F)
+plot_glmnet(fitlasso,label = 8)
+```
 
+On voit que les variables les plus affectantes sont: 
+-T1: 1h, 3h, 5h 
+-T2: 3h, 4h, 5h, 6h 
+-T3: 5h
 \newpage
 
 ## Modèle linéaire généralisé
