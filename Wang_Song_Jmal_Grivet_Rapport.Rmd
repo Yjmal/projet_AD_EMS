@@ -531,7 +531,7 @@ pd.crosstab(kmeans.labels_,"freq")
 
 ```{r, echo = F, fig.cap="\\label{fig:silhouette}Graphique des silhouettes scores pour nos 3 clusters", fig.height=2.5}
 aux<-silhouette(km$cluster, daisy(coord))
-aux2 = data.frame(aux)
+aux2 = as.data.frame.matrix(aux)
 aux2c1 = aux2$sil_width[aux2$cluster==1]
 aux2c2 = aux2$sil_width[aux2$cluster==2]
 aux2c3 = aux2$sil_width[aux2$cluster==3]
@@ -1201,12 +1201,21 @@ glm.T36HR2<-glm(T36HR2_binomial$T3_6h_R2~., data=T36HR2_binomial,family=binomial
 summary(glm.T36HR2)
 ```
 
+
+```{python, include = F}
+#transformation de la variable réponse en binaire 
+y = data_T3_6h_R2>1
+y = y.astype(int)
+y.value_counts()
+```
+
 En prenant en compte toutes les variables, le modèle linéaire généralisé n'arrive pas à bien ajuster le modèle. On remarque que toutes les pvaleurs sont égales à 1. \newline Ceci est probablement dû au fait que les variables sont très liées les unes aux autres.
 
 ```{r include=F, echo = F}
 step.backward <- step(glm.T36HR2, trace=F)
 summary(step.backward)
 ```
+
 
 Cependant, d'après la table lorsqu'on fait une sélection de variable "backward" sur notre modèle, on obtient que T3_6h_R2 peut s'expliquer par les variables : T1_4h_R2, T1_6h_R2, T2_5h_R2, T3_3h_R2.
 
@@ -1229,6 +1238,16 @@ glm.T1R2_T3_6h_R2<-glm(T3_6h_R2~.,data=T1R2_T3_6h_R2,family=binomial(link="logit
 summary(glm.T1R2_T3_6h_R2)
 ```
 
+
+```{python, include = F}
+#On utilise Sklearn
+from sklearn.linear_model import LogisticRegression
+LR = LogisticRegression()
+x_data = data_R2.drop('T3_6h_R2',axis = 1)
+lr_fit = LR.fit(x_data,y)
+print(lr_fit.coef_)
+```
+
 ```{r include=F, echo = F}
 step.backward <- step(glm.T1R2_T3_6h_R2, trace=F)
 summary(step.backward)
@@ -1245,10 +1264,29 @@ T1 = data[grep("T1", names(data), value=TRUE)]
 T1R2 = T1[grep("R2", names(T1), value=TRUE)]
 ```
 
+```{python, include = F}
+X = data[["T1_1h_R2","T1_2h_R2","T1_3h_R2","T1_4h_R2","T1_5h_R2"]]
+X_stat = sm.add_constant(X)
+T1_6h_R2 = data[['T1_6h_R2']]
+regmulti3 = sm.OLS(T1_6h_R2,X_stat)
+results3 = regmulti3.fit()
+print(results3.summary())
+```
+
+
+
 ```{r include=FALSE}
 reg.mul2 <- lm(T1_6h_R2 ~ ., data = T1R2)
 summary(reg.mul2)
 ```
+
+```{python, include = F}
+data_sous_mod2 = data[['T1_2h_R2','T1_3h_R2','T1_4h_R2','T1_5h_R2']]
+X_stat = sm.add_constant(data_sous_mod2)
+regmulti_sous2 = sm.OLS(T1_6h_R2,X_stat)
+results_sous2 = regmulti_sous2.fit()
+```
+
 
 ```{r, echo = F, , fig.cap="\\label{fig:selection3}Selection de variable du traitement 1 selon le critère BIC et la méthode backward", fig.height=3.5}
 choix=regsubsets(T1_6h_R2~., data = T1R2, nbest = 1, nvmax = 5, method = "backward")
@@ -1282,6 +1320,13 @@ mod.fin = lm(T1_6h_R2 ~ T1_2h_R2+T1_3h_R2+T1_4h_R2+T1_5h_R2, data = T1R2)
 anova(mod.fin,mod.debut)
 ```
 
+```{python, include = F}
+from statsmodels.stats.anova import anova_lm
+anovaResults2 = anova_lm(results_sous2,results3)
+print(anovaResults2)
+```
+
+
 p-valeur = 0.5687 \> 0.05, on ne rejette pas H0 au risque de 5%, on valide le sous-modèle.
 
 ### Etude sur tous les traitements et tous les temps
@@ -1291,10 +1336,29 @@ reg.mul_complet <- lm(T1_6h_R2 ~ ., data = R2)
 summary(reg.mul_complet)
 ```
 
-```{r, fig.cap="\\label{fig:selection4}Selection de variable sur tous les traitement selon le critère BIC et la méthode backward",fig.height=3.5}
+```{python, include = F}
+X = data_R2.drop('T1_6h_R2',axis=1)
+X_stat = sm.add_constant(X)
+regmulti4 = sm.OLS(T1_6h_R2,X_stat)
+results4 = regmulti4.fit()
+print(results4.summary())
+```
+
+
+```{r, echo = F, fig.cap="\\label{fig:selection4}Selection de variable sur tous les traitement selon le critère BIC et la méthode backward",fig.height=3.5}
 choix=regsubsets(T1_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "backward")
 plot(choix,scale = "bic")
 ```
+
+```{python, include = F}
+X_sous_mod4 = data[['T1_1h_R2','T1_2h_R2','T1_3h_R2','T1_4h_R2','T1_5h_R2','T2_1h_R2','T2_2h_R2','T2_3h_R2','T2_6h_R2','T3_1h_R2','T3_5h_R2','T3_6h_R2']]
+X_sous_mod_stat4 = sm.add_constant(X_sous_mod4)
+regmulti5 = sm.OLS(T1_6h_R2,X_sous_mod_stat4)
+results5 = regmulti5.fit()
+anovaResults3 = anova_lm(results5,results4)
+print(anovaResults3)
+```
+
 
 ```{r include=FALSE}
 choix=regsubsets(T1_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "forward")
@@ -1330,7 +1394,7 @@ On voit que l'expression des gènes à 6h pour le traitement T1 est affecté par
 
 ### Lasso
 
-```{r, fig.height=3}
+```{r, echo = F, fig.height=3}
 lambda_seq=seq(0,1,0.001)
 x = model.matrix(T1_6h_R2~.,data=R2)
 y = data$T1_6h_R2
@@ -1359,6 +1423,22 @@ dfmodel["Y"] = Y
 dfmodel = dfmodel[-(6)]
 model <- multinom(Y ~ ., data = dfmodel, trace=F)
 summary(model)
+```
+
+```{python, include = F}
+df = data
+df.T1_6h_R2[df.T1_6h_R2>=1] = 3
+df.T1_6h_R2[(df.T1_6h_R2>-1)& (df.T1_6h_R2<1)] = 2 
+df.T1_6h_R2[df.T1_6h_R2<=-1] = 1
+plt.hist(df.T1_6h_R2)
+```
+
+```{python, include = F}
+from statsmodels.formula.api import glm
+df_sans = df.drop('T1_6h_R2',axis = 1)
+sh = '+'.join(list(df_sans.columns))
+reg_log=glm('T1_6h_R2~T1_1h_R2+T1_2h_R2+T1_3h_R2+T1_4h_R2+T1_5h_R2+T2_1h_R2+T2_2h_R2+T2_3h_R2+T2_4h_R2+T2_5h_R2+T2_6h_R2+T3_1h_R2+T3_2h_R2+T3_3h_R2+T3_4h_R2+T3_5h_R2+T3_6h_R2',data=df,family=sm.families.Poisson()).fit()
+reg_log.summary()
 ```
 
 ```{r include=F, echo = F}
