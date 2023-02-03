@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2022.11.18)  30 JAN 2023 17:55
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2022.11.18)  3 FEB 2023 18:57
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -559,456 +559,381 @@ LaTeX Font Info:    External font `lmex10' loaded for size
 
 {/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}]
 LaTeX Font Info:    Trying to load font information for TS1+lmr on input line 1
-40.
+35.
 (/usr/share/texmf/tex/latex/lm/ts1lmr.fd
 File: ts1lmr.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
-Overfull \hbox (2.92694pt too wide) in paragraph at lines 183--184
- []\T1/lmr/m/n/10 (-20) T1_1h_R1
- []
-
-
-Overfull \hbox (2.92694pt too wide) in paragraph at lines 185--186
- []\T1/lmr/m/n/10 (-20) T1_2h_R1
- []
-
-
-Overfull \hbox (2.92694pt too wide) in paragraph at lines 187--188
- []\T1/lmr/m/n/10 (-20) T1_3h_R1
- []
-
-
-Overfull \hbox (2.92694pt too wide) in paragraph at lines 189--190
- []\T1/lmr/m/n/10 (-20) T1_4h_R1
- []
-
-
-Overfull \hbox (2.92694pt too wide) in paragraph at lines 191--192
- []\T1/lmr/m/n/10 (-20) T1_5h_R1
- []
-
-
-Overfull \hbox (2.92694pt too wide) in paragraph at lines 193--194
- []\T1/lmr/m/n/10 (-20) T1_6h_R1
- []
-
-
-Overfull \hbox (2.92694pt too wide) in paragraph at lines 195--196
- []\T1/lmr/m/n/10 (-20) T2_1h_R1
- []
-
-
-Overfull \hbox (2.92694pt too wide) in paragraph at lines 197--198
- []\T1/lmr/m/n/10 (-20) T2_2h_R1
- []
-
-
-Overfull \hbox (2.92694pt too wide) in paragraph at lines 204--205
- []\T1/lmr/m/n/10 (-20) T1_1h_R1
- []
-
-
-Overfull \hbox (2.92694pt too wide) in paragraph at lines 206--207
- []\T1/lmr/m/n/10 (-20) T1_2h_R1
- []
-
-
-Overfull \hbox (2.92694pt too wide) in paragraph at lines 208--209
- []\T1/lmr/m/n/10 (-20) T1_3h_R1
- []
-
-
-Overfull \hbox (2.92694pt too wide) in paragraph at lines 210--211
- []\T1/lmr/m/n/10 (-20) T1_4h_R1
- []
-
-
-Overfull \hbox (2.92694pt too wide) in paragraph at lines 212--213
- []\T1/lmr/m/n/10 (-20) T1_5h_R1
- []
-
-
-Overfull \hbox (2.92694pt too wide) in paragraph at lines 214--215
- []\T1/lmr/m/n/10 (-20) T1_6h_R1
- []
-
-
-Overfull \hbox (2.92694pt too wide) in paragraph at lines 216--217
- []\T1/lmr/m/n/10 (-20) T2_1h_R1
- []
-
-
-Overfull \hbox (2.92694pt too wide) in paragraph at lines 218--219
- []\T1/lmr/m/n/10 (-20) T2_2h_R1
- []
-
-LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 2
-45.
+LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 1
+63.
 (/usr/share/texmf/tex/latex/lm/t1lmtt.fd
 File: t1lmtt.fd 2009/10/30 v1.6 Font defs for Latin Modern
+)
+LaTeX Font Info:    Trying to load font information for TS1+lmtt on input line 
+182.
+(/usr/share/texmf/tex/latex/lm/ts1lmtt.fd
+File: ts1lmtt.fd 2009/10/30 v1.6 Font defs for Latin Modern
 ) [2]
-<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-9-1.pdf, id=58,
- 459.7175pt x 204.765pt>
+Overfull \hbox (2.92694pt too wide) in paragraph at lines 238--239
+ []\T1/lmr/m/n/10 (-20) T1_1h_R1
+ []
+
+
+Overfull \hbox (2.92694pt too wide) in paragraph at lines 240--241
+ []\T1/lmr/m/n/10 (-20) T1_2h_R1
+ []
+
+
+Overfull \hbox (2.92694pt too wide) in paragraph at lines 242--243
+ []\T1/lmr/m/n/10 (-20) T1_3h_R1
+ []
+
+
+Overfull \hbox (2.92694pt too wide) in paragraph at lines 244--245
+ []\T1/lmr/m/n/10 (-20) T1_4h_R1
+ []
+
+
+Overfull \hbox (2.92694pt too wide) in paragraph at lines 246--247
+ []\T1/lmr/m/n/10 (-20) T1_5h_R1
+ []
+
+
+Overfull \hbox (2.92694pt too wide) in paragraph at lines 248--249
+ []\T1/lmr/m/n/10 (-20) T1_6h_R1
+ []
+
+
+Overfull \hbox (2.92694pt too wide) in paragraph at lines 250--251
+ []\T1/lmr/m/n/10 (-20) T2_1h_R1
+ []
+
+
+Overfull \hbox (2.92694pt too wide) in paragraph at lines 252--253
+ []\T1/lmr/m/n/10 (-20) T2_2h_R1
+ []
+
+
+Overfull \hbox (2.92694pt too wide) in paragraph at lines 259--260
+ []\T1/lmr/m/n/10 (-20) T1_1h_R1
+ []
+
+
+Overfull \hbox (2.92694pt too wide) in paragraph at lines 261--262
+ []\T1/lmr/m/n/10 (-20) T1_2h_R1
+ []
+
+
+Overfull \hbox (2.92694pt too wide) in paragraph at lines 263--264
+ []\T1/lmr/m/n/10 (-20) T1_3h_R1
+ []
+
+
+Overfull \hbox (2.92694pt too wide) in paragraph at lines 265--266
+ []\T1/lmr/m/n/10 (-20) T1_4h_R1
+ []
+
+
+Overfull \hbox (2.92694pt too wide) in paragraph at lines 267--268
+ []\T1/lmr/m/n/10 (-20) T1_5h_R1
+ []
+
+
+Overfull \hbox (2.92694pt too wide) in paragraph at lines 269--270
+ []\T1/lmr/m/n/10 (-20) T1_6h_R1
+ []
+
+
+Overfull \hbox (2.92694pt too wide) in paragraph at lines 271--272
+ []\T1/lmr/m/n/10 (-20) T2_1h_R1
+ []
+
+
+Overfull \hbox (2.92694pt too wide) in paragraph at lines 273--274
+ []\T1/lmr/m/n/10 (-20) T2_2h_R1
+ []
+
+[3]
+<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-9-1.pdf, id=63,
+ 495.8525pt x 146.5475pt>
 File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-9-1.pdf Gr
 aphic file (type pdf)
 <use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-9-1.pdf>
 Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
-ed-chunk-9-1.pdf  used on input line 252.
-(pdftex.def)             Requested size: 459.74442pt x 204.77698pt.
-[3 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-9-1.pdf>]
-<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-11-1.pdf, id=72
-, 393.47pt x 355.3275pt>
+ed-chunk-9-1.pdf  used on input line 307.
+(pdftex.def)             Requested size: 469.75583pt x 138.83469pt.
+<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-11-1.pdf, id=65
+, 315.1775pt x 284.06125pt>
 File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-11-1.pdf G
 raphic file (type pdf)
 <use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-11-1.pdf>
 Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
-ed-chunk-11-1.pdf  used on input line 273.
-(pdftex.def)             Requested size: 393.46902pt x 355.32661pt.
-[4 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-11-1.pdf>]
-<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-13-2.pdf, id=86
-, 416.55624pt x 148.555pt>
+ed-chunk-11-1.pdf  used on input line 326.
+(pdftex.def)             Requested size: 315.19595pt x 284.07787pt.
+[4 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-9-1.pdf> <
+./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-11-1.pdf>]
+<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-13-2.pdf, id=87
+, 445.665pt x 113.42375pt>
 File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-13-2.pdf G
 raphic file (type pdf)
 <use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-13-2.pdf>
 Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
-ed-chunk-13-2.pdf  used on input line 291.
-(pdftex.def)             Requested size: 416.57428pt x 148.56142pt.
-<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-15-1.pdf, id=88
-, 422.57875pt x 105.39375pt>
+ed-chunk-13-2.pdf  used on input line 344.
+(pdftex.def)             Requested size: 445.66391pt x 113.42346pt.
+<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-15-1.pdf, id=89
+, 422.57875pt x 92.345pt>
 File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-15-1.pdf G
 raphic file (type pdf)
 <use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-15-1.pdf>
 Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
-ed-chunk-15-1.pdf  used on input line 304.
-(pdftex.def)             Requested size: 422.58415pt x 105.39508pt.
+ed-chunk-15-1.pdf  used on input line 362.
+(pdftex.def)             Requested size: 422.57771pt x 92.34476pt.
 [5 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-13-2.pdf> 
 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-15-1.pdf>]
 <Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-18-1.pdf, id=11
-1, 406.51875pt x 232.87pt>
+1, 406.51875pt x 115.43124pt>
 File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-18-1.pdf G
 raphic file (type pdf)
 <use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-18-1.pdf>
 Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
-ed-chunk-18-1.pdf  used on input line 326.
-(pdftex.def)             Requested size: 406.53015pt x 232.87651pt.
+ed-chunk-18-1.pdf  used on input line 384.
+(pdftex.def)             Requested size: 406.51775pt x 115.43095pt.
 <Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-21-2.pdf, id=11
 3, 437.635pt x 135.50626pt>
 File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-21-2.pdf G
 raphic file (type pdf)
 <use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-21-2.pdf>
 Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
-ed-chunk-21-2.pdf  used on input line 338.
+ed-chunk-21-2.pdf  used on input line 397.
 (pdftex.def)             Requested size: 437.6406pt x 135.50797pt.
 [6 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-18-1.pdf> 
 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-21-2.pdf>]
-LaTeX Font Info:    Font shape `T1/lmtt/bx/n' in size <10> not available
-(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 366.
 <Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-28-2.pdf, id=13
-9, 406.51875pt x 232.87pt>
+9, 406.51875pt x 115.43124pt>
 File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-28-2.pdf G
 raphic file (type pdf)
 <use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-28-2.pdf>
 Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
-ed-chunk-28-2.pdf  used on input line 383.
-(pdftex.def)             Requested size: 406.53015pt x 232.87651pt.
+ed-chunk-28-2.pdf  used on input line 425.
+(pdftex.def)             Requested size: 406.51775pt x 115.43095pt.
 <Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-31-1.pdf, id=14
-1, 457.71pt x 316.18124pt>
+1, 457.71pt x 207.77625pt>
 File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-31-1.pdf G
 raphic file (type pdf)
 <use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-31-1.pdf>
 Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
-ed-chunk-31-1.pdf  used on input line 397.
-(pdftex.def)             Requested size: 457.72984pt x 316.19493pt.
-[7 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-28-2.pdf>]
-[8 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-31-1.pdf>]
-<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-38-1.pdf, id=17
-4, 463.7325pt x 316.18124pt>
+ed-chunk-31-1.pdf  used on input line 440.
+(pdftex.def)             Requested size: 457.72984pt x 207.78523pt.
+[7 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-28-2.pdf> 
+<./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-31-1.pdf>]
+<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-38-1.pdf, id=16
+9, 463.7325pt x 316.18124pt>
 File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-38-1.pdf G
 raphic file (type pdf)
 <use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-38-1.pdf>
 Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
-ed-chunk-38-1.pdf  used on input line 439.
+ed-chunk-38-1.pdf  used on input line 482.
 (pdftex.def)             Requested size: 463.73842pt x 316.18529pt.
 <Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-41-1.pdf, id=17
-7, 566.115pt x 298.11375pt>
+2, 566.115pt x 298.11375pt>
 File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-41-1.pdf G
 raphic file (type pdf)
 <use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-41-1.pdf>
 Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
-ed-chunk-41-1.pdf  used on input line 455.
+ed-chunk-41-1.pdf  used on input line 498.
 (pdftex.def)             Requested size: 469.76303pt x 247.37521pt.
-[9 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-38-1.pdf>]
+[8 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-38-1.pdf>]
 <Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-44-1.pdf, id=19
-6, 438.63875pt x 190.7125pt>
+1, 457.71pt x 154.5775pt>
 File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-44-1.pdf G
 raphic file (type pdf)
 <use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-44-1.pdf>
 Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
-ed-chunk-44-1.pdf  used on input line 484.
-(pdftex.def)             Requested size: 438.64435pt x 190.71492pt.
+ed-chunk-44-1.pdf  used on input line 527.
+(pdftex.def)             Requested size: 457.72984pt x 154.58417pt.
 <Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-46-1.pdf, id=19
-7, 459.7175pt x 204.765pt>
+2, 459.7175pt x 204.765pt>
 File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-46-1.pdf G
 raphic file (type pdf)
 <use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-46-1.pdf>
 Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
-ed-chunk-46-1.pdf  used on input line 497.
+ed-chunk-46-1.pdf  used on input line 540.
 (pdftex.def)             Requested size: 459.74442pt x 204.77698pt.
-<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-49-1.pdf, id=19
-8, 361.35pt x 361.35pt>
+[9 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-41-1.pdf> 
+<./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-44-1.pdf>]
+<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-49-1.pdf, id=21
+3, 459.7175pt x 133.49875pt>
 File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-49-1.pdf G
 raphic file (type pdf)
 <use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-49-1.pdf>
 Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
-ed-chunk-49-1.pdf  used on input line 521.
-(pdftex.def)             Requested size: 361.34912pt x 361.34912pt.
-[10 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-41-1.pdf>
-] [11 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-44-1.pd
-f> <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-46-1.pdf>]
-[12 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-49-1.pdf>
-]
-<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-50-3.pdf, id=25
-2, 459.7175pt x 204.765pt>
-File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-50-3.pdf G
-raphic file (type pdf)
-<use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-50-3.pdf>
-Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
-ed-chunk-50-3.pdf  used on input line 537.
-(pdftex.def)             Requested size: 459.74442pt x 204.77698pt.
-LaTeX Font Info:    Trying to load font information for TS1+lmtt on input line 
-550.
-(/usr/share/texmf/tex/latex/lm/ts1lmtt.fd
-File: ts1lmtt.fd 2009/10/30 v1.6 Font defs for Latin Modern
-) [13 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-50-3.pd
-f>]
-<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-56-1.pdf, id=26
+ed-chunk-49-1.pdf  used on input line 564.
+(pdftex.def)             Requested size: 459.74442pt x 133.50653pt.
+[10 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-46-1.pdf>
+ <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-49-1.pdf>]
+<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-57-1.pdf, id=23
 9, 459.7175pt x 207.77625pt>
-File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-56-1.pdf G
+File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-57-1.pdf G
 raphic file (type pdf)
-<use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-56-1.pdf>
+<use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-57-1.pdf>
 Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
-ed-chunk-56-1.pdf  used on input line 568.
+ed-chunk-57-1.pdf  used on input line 588.
 (pdftex.def)             Requested size: 459.73741pt x 207.78523pt.
 
-LaTeX Warning: Reference `fig:icl3' on page 14 undefined on input line 572.
+LaTeX Warning: Reference `fig:icl3' on page 11 undefined on input line 592.
 
-<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-61-1.pdf, id=27
+<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-63-1.pdf, id=24
 0, 459.7175pt x 204.765pt>
-File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-61-1.pdf G
-raphic file (type pdf)
-<use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-61-1.pdf>
-Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
-ed-chunk-61-1.pdf  used on input line 597.
-(pdftex.def)             Requested size: 459.74442pt x 204.77698pt.
-<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-62-1.pdf, id=27
-1, 463.7325pt x 189.70876pt>
-File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-62-1.pdf G
-raphic file (type pdf)
-<use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-62-1.pdf>
-Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
-ed-chunk-62-1.pdf  used on input line 607.
-(pdftex.def)             Requested size: 463.73842pt x 189.71117pt.
-<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-63-1.pdf, id=27
-2, 174.6525pt x 188.705pt>
 File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-63-1.pdf G
 raphic file (type pdf)
 <use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-63-1.pdf>
 Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
-ed-chunk-63-1.pdf  used on input line 625.
+ed-chunk-63-1.pdf  used on input line 610.
+(pdftex.def)             Requested size: 459.74442pt x 204.77698pt.
+[11 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-57-1.pdf>
+ <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-63-1.pdf>]
+<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-64-1.pdf, id=26
+3, 174.6525pt x 188.705pt>
+File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-64-1.pdf G
+raphic file (type pdf)
+<use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-64-1.pdf>
+Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
+ed-chunk-64-1.pdf  used on input line 631.
 (pdftex.def)             Requested size: 174.65207pt x 188.70453pt.
-[14 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-56-1.pdf>
-] [15 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-61-1.pd
-f> <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-62-1.pdf>]
-<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-66-1.pdf, id=31
-3, 463.7325pt x 206.7725pt>
-File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-66-1.pdf G
-raphic file (type pdf)
-<use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-66-1.pdf>
-Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
-ed-chunk-66-1.pdf  used on input line 660.
-(pdftex.def)             Requested size: 463.73842pt x 206.77513pt.
-<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-71-1.pdf, id=31
-4, 457.71pt x 189.70876pt>
-File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-71-1.pdf G
-raphic file (type pdf)
-<use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-71-1.pdf>
-Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
-ed-chunk-71-1.pdf  used on input line 665.
-(pdftex.def)             Requested size: 457.71587pt x 189.71117pt.
-<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-71-2.pdf, id=31
-5, 457.71pt x 207.77625pt>
-File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-71-2.pdf G
-raphic file (type pdf)
-<use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-71-2.pdf>
-Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
-ed-chunk-71-2.pdf  used on input line 666.
-(pdftex.def)             Requested size: 457.72984pt x 207.78523pt.
-
-Underfull \hbox (badness 10000) in paragraph at lines 665--667
-[][]
- []
-
-[16 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-63-1.pdf>
- <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-66-1.pdf>]
-
-LaTeX Warning: Reference `fig:acp5' on page 17 undefined on input line 669.
-
-<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-73-1.pdf, id=33
-9, 361.35pt x 361.35pt>
-File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-73-1.pdf G
-raphic file (type pdf)
-<use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-73-1.pdf>
-Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
-ed-chunk-73-1.pdf  used on input line 680.
-(pdftex.def)             Requested size: 361.34912pt x 361.34912pt.
-
-LaTeX Warning: Reference `fig:{dendogram3}' on page 17 undefined on input line 
-687.
-
-<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-74-3.pdf, id=34
-0, 459.7175pt x 204.765pt>
-File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-74-3.pdf G
-raphic file (type pdf)
-<use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-74-3.pdf>
-Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
-ed-chunk-74-3.pdf  used on input line 691.
-(pdftex.def)             Requested size: 459.74442pt x 204.77698pt.
-<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-76-3.pdf, id=34
-1, 453.695pt x 204.765pt>
-File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-76-3.pdf G
-raphic file (type pdf)
-<use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-76-3.pdf>
-Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
-ed-chunk-76-3.pdf  used on input line 701.
-(pdftex.def)             Requested size: 453.6939pt x 204.76448pt.
-[17 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-71-1.pdf>
- <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-71-2.pdf>] [
-18 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-73-1.pdf> 
-<./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-74-3.pdf>]
-<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-78-1.pdf, id=38
-8, 459.7175pt x 207.77625pt>
-File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-78-1.pdf G
-raphic file (type pdf)
-<use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-78-1.pdf>
-Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
-ed-chunk-78-1.pdf  used on input line 708.
-(pdftex.def)             Requested size: 459.73741pt x 207.78523pt.
-<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-81-1.pdf, id=38
-9, 459.7175pt x 204.765pt>
-File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-81-1.pdf G
-raphic file (type pdf)
-<use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-81-1.pdf>
-Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
-ed-chunk-81-1.pdf  used on input line 719.
-(pdftex.def)             Requested size: 459.74442pt x 204.77698pt.
-[19 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-76-3.pdf>
- <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-78-1.pdf>]
-<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-83-1.pdf, id=41
-1, 453.695pt x 204.765pt>
-File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-83-1.pdf G
-raphic file (type pdf)
-<use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-83-1.pdf>
-Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
-ed-chunk-83-1.pdf  used on input line 724.
-(pdftex.def)             Requested size: 453.6939pt x 204.76448pt.
-[20 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-81-1.pdf>
- <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-83-1.pdf>]
-Underfull \hbox (badness 10000) in paragraph at lines 757--759
-
- []
-
-<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-93-1.pdf, id=43
-0, 407.5225pt x 133.49875pt>
-File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-93-1.pdf G
-raphic file (type pdf)
-<use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-93-1.pdf>
-Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
-ed-chunk-93-1.pdf  used on input line 791.
-(pdftex.def)             Requested size: 407.54015pt x 133.5045pt.
-[21 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-93-1.pdf>
+[12 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-64-1.pdf>
 ]
-<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-100-1.pdf, id=4
-46, 407.5225pt x 133.49875pt>
-File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-100-1.pdf 
-Graphic file (type pdf)
-<use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-100-1.pdf>
+<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-67-1.pdf, id=27
+9, 463.7325pt x 170.6375pt>
+File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-67-1.pdf G
+raphic file (type pdf)
+<use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-67-1.pdf>
 Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
-ed-chunk-100-1.pdf  used on input line 816.
+ed-chunk-67-1.pdf  used on input line 667.
+(pdftex.def)             Requested size: 463.73842pt x 170.63966pt.
+<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-72-1.pdf, id=28
+0, 457.71pt x 207.77625pt>
+File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-72-1.pdf G
+raphic file (type pdf)
+<use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-72-1.pdf>
+Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
+ed-chunk-72-1.pdf  used on input line 674.
+(pdftex.def)             Requested size: 457.72984pt x 207.78523pt.
+[13 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-67-1.pdf>
+ <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-72-1.pdf>]
+<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-75-2.pdf, id=30
+9, 459.7175pt x 168.63pt>
+File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-75-2.pdf G
+raphic file (type pdf)
+<use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-75-2.pdf>
+Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
+ed-chunk-75-2.pdf  used on input line 697.
+(pdftex.def)             Requested size: 459.72337pt x 168.63214pt.
+<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-82-1.pdf, id=31
+0, 459.7175pt x 132.495pt>
+File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-82-1.pdf G
+raphic file (type pdf)
+<use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-82-1.pdf>
+Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
+ed-chunk-82-1.pdf  used on input line 716.
+(pdftex.def)             Requested size: 459.74442pt x 132.50273pt.
+[14 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-75-2.pdf>
+ <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-82-1.pdf>] [
+15]
+Underfull \hbox (badness 10000) in paragraph at lines 753--755
+
+ []
+
+<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-94-1.pdf, id=33
+7, 407.5225pt x 133.49875pt>
+File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-94-1.pdf G
+raphic file (type pdf)
+<use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-94-1.pdf>
+Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
+ed-chunk-94-1.pdf  used on input line 787.
 (pdftex.def)             Requested size: 407.54015pt x 133.5045pt.
-[22 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-100-1.pdf
->]
-<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-104-1.pdf, id=4
-63, 457.71pt x 216.81pt>
-File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-104-1.pdf 
+[16 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-94-1.pdf>
+]
+<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-101-1.pdf, id=3
+52, 407.5225pt x 133.49875pt>
+File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-101-1.pdf 
 Graphic file (type pdf)
-<use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-104-1.pdf>
+<use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-101-1.pdf>
 Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
-ed-chunk-104-1.pdf  used on input line 854.
-(pdftex.def)             Requested size: 457.72984pt x 216.81938pt.
-<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-105-1.pdf, id=4
-64, 422.57875pt x 155.58125pt>
+ed-chunk-101-1.pdf  used on input line 812.
+(pdftex.def)             Requested size: 407.54015pt x 133.5045pt.
+[17 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-101-1.pdf
+>]
+<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-105-1.pdf, id=3
+69, 457.71pt x 216.81pt>
 File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-105-1.pdf 
 Graphic file (type pdf)
 <use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-105-1.pdf>
 Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
-ed-chunk-105-1.pdf  used on input line 856.
+ed-chunk-105-1.pdf  used on input line 850.
+(pdftex.def)             Requested size: 457.72984pt x 216.81938pt.
+<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-106-1.pdf, id=3
+70, 422.57875pt x 155.58125pt>
+File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-106-1.pdf 
+Graphic file (type pdf)
+<use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-106-1.pdf>
+Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
+ed-chunk-106-1.pdf  used on input line 852.
 (pdftex.def)             Requested size: 422.58415pt x 155.58322pt.
-[23 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-104-1.pdf
-> <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-105-1.pdf>]
-[24]
-<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-113-1.pdf, id=4
-90, 407.5225pt x 133.49875pt>
-File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-113-1.pdf 
+[18 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-105-1.pdf
+> <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-106-1.pdf>]
+[19]
+<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-114-1.pdf, id=3
+97, 407.5225pt x 133.49875pt>
+File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-114-1.pdf 
 Graphic file (type pdf)
-<use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-113-1.pdf>
+<use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-114-1.pdf>
 Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
-ed-chunk-113-1.pdf  used on input line 980.
+ed-chunk-114-1.pdf  used on input line 972.
 (pdftex.def)             Requested size: 407.54015pt x 133.5045pt.
-[25 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-113-1.pdf
+[20 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-114-1.pdf
 >]
-<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-117-1.pdf, id=5
-06, 407.5225pt x 133.49875pt>
-File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-117-1.pdf 
+<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-118-1.pdf, id=4
+12, 407.5225pt x 133.49875pt>
+File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-118-1.pdf 
 Graphic file (type pdf)
-<use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-117-1.pdf>
+<use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-118-1.pdf>
 Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
-ed-chunk-117-1.pdf  used on input line 1019.
+ed-chunk-118-1.pdf  used on input line 1011.
 (pdftex.def)             Requested size: 407.54015pt x 133.5045pt.
 
-Underfull \hbox (badness 10000) in paragraph at lines 1024--1031
+Underfull \hbox (badness 10000) in paragraph at lines 1016--1023
 
  []
 
-[26 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-117-1.pdf
+[21 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-118-1.pdf
 >]
-<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-120-1.pdf, id=5
-23, 436.63126pt x 168.63pt>
-File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-120-1.pdf 
+<Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-121-1.pdf, id=4
+30, 436.63126pt x 168.63pt>
+File: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-121-1.pdf 
 Graphic file (type pdf)
-<use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-120-1.pdf>
+<use Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-121-1.pdf>
 Package pdftex.def Info: Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnam
-ed-chunk-120-1.pdf  used on input line 1085.
+ed-chunk-121-1.pdf  used on input line 1067.
 (pdftex.def)             Requested size: 436.63019pt x 168.62958pt.
-[27 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-120-1.pdf
+[22 <./Wang_Song_Jmal_Grivet_Rapport_files/figure-latex/unnamed-chunk-121-1.pdf
 >]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 1135.
-[28]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 1135.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 1117.
+[23]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 1117.
 (./Wang_Song_Jmal_Grivet_Rapport.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 1135.
-Package atveryend Info: Empty hook `AtEndAfterFileList' on input line 1135.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 1117.
+Package atveryend Info: Empty hook `AtEndAfterFileList' on input line 1117.
 
 LaTeX Warning: There were undefined references.
 
  ) 
 Here is how much of TeX's memory you used:
- 14170 strings out of 481239
- 218908 string characters out of 5920376
- 508392 words of memory out of 5000000
- 28971 multiletter control sequences out of 15000+600000
- 582353 words of font info for 107 fonts, out of 8000000 for 9000
+ 14116 strings out of 481239
+ 215818 string characters out of 5920376
+ 506232 words of memory out of 5000000
+ 28928 multiletter control sequences out of 15000+600000
+ 582201 words of font info for 108 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 41i,7n,42p,1547b,335s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 41i,7n,42p,1547b,463s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/share/texmf/fonts/enc/dvips/lm/lm-ts1.enc}{/usr/share/texmf/fonts/enc/d
 vips/lm/lm-ec.enc}{/usr/share/texmf/fonts/enc/dvips/lm/lm-rm.enc}{/usr/share/te
 xmf/fonts/enc/dvips/lm/lm-mathsy.enc}{/usr/share/texmf/fonts/enc/dvips/lm/lm-ma
@@ -1019,11 +944,11 @@ ype1/public/lm/lmr10.pfb></usr/share/texmf/fonts/type1/public/lm/lmr12.pfb></us
 r/share/texmf/fonts/type1/public/lm/lmr17.pfb></usr/share/texmf/fonts/type1/pub
 lic/lm/lmr5.pfb></usr/share/texmf/fonts/type1/public/lm/lmr7.pfb></usr/share/te
 xmf/fonts/type1/public/lm/lmsy10.pfb></usr/share/texmf/fonts/type1/public/lm/lm
-tk10.pfb></usr/share/texmf/fonts/type1/public/lm/lmtt10.pfb>
-Output written on Wang_Song_Jmal_Grivet_Rapport.pdf (28 pages, 1719223 bytes).
+tt10.pfb>
+Output written on Wang_Song_Jmal_Grivet_Rapport.pdf (23 pages, 1323705 bytes).
 PDF statistics:
- 653 PDF objects out of 1000 (max. 8388607)
- 495 compressed objects within 5 object streams
- 108 named destinations out of 1000 (max. 500000)
- 10515 words of extra memory for PDF output out of 12000 (max. 10000000)
+ 556 PDF objects out of 1000 (max. 8388607)
+ 431 compressed objects within 5 object streams
+ 101 named destinations out of 1000 (max. 500000)
+ 10480 words of extra memory for PDF output out of 12000 (max. 10000000)
 

@@ -10,13 +10,11 @@ output:
     toc_depth : 2
     number_section : TRUE
 ---
-\vspace{3em}
-Tout ce qui se trouve dans le Rmarkdown mais pas dans le pdf est indiqué par ce symbole : (%%)
 
 ```{r setup, include=FALSE}
 library(knitr)
 library(nnet)
-opts_chunk$set(echo = TRUE, cache=TRUE)
+opts_chunk$set(echo = TRUE, cache=TRUE, warning=FALSE)
 opts_knit$set(width=75)
 ```
 
@@ -40,7 +38,7 @@ Nous allons dans cette partie effectuer une analyse des statistiques descriptive
 
 ## Statistiques descriptives et préparation du jeu de données
 
-```{r include=FALSE}
+```{r echo=FALSE}
 rm(list=ls())
 library(reticulate)
 library(ggplot2)
@@ -59,7 +57,7 @@ library(circlize)
 library(plotmo)
 ```
 
-```{python include=FALSE}
+```{python, echo=FALSE}
 import numpy as np
 import pandas as pd 
 import matplotlib.pyplot as plt
@@ -120,7 +118,7 @@ print(summary(data))
 datapy.describe()
 ```
 
-Avec le résultat de la commande python `datapy.isnull().sum()`, on voit bien que notre jeu de données est complet. (%%)
+Avec le résultat de la commande python `datapy.isnull().sum()`, on voit bien sur le Rmd que notre jeu de données est complet.
 
 ```{python include=FALSE}
 datapy.isnull().sum()
@@ -128,7 +126,7 @@ datapy.isnull().sum()
 
 \newpage
 
-```{r, echo = F, fig.cap="\\label{fig:boxplots}Boxplots des 36 variables",fig.height=3}
+```{r, echo = F, fig.cap="\\label{fig:boxplots}Boxplots des 36 variables", fig.height=2.2, fig.width=7}
 # Boxplot
 ggplot(stack(data), aes(x = ind, y = values))+ 
   geom_boxplot()+ 
@@ -136,7 +134,7 @@ ggplot(stack(data), aes(x = ind, y = values))+
 ```
 
 On remarque dans la figure \ref{fig:boxplots} que les boxplots du traitement 2 et du traitement 3 ne sont pas centrés. On peut penser qu'ils ont donc un effet non nul sur les gènes. En étudiant la forme des boxplots, on remarque une dissymétrie pour ces deux traitements, de nombreux outliers ainsi qu'une forte variabilité entre les individus. \newline
-Les boxplots du traitement 2 et du traitement 3 sont d'ailleurs similaires, quelque soit le réplicat. On peut donc faire l'hypothèse que ces deux traitements donnent des résultats similaires. \vspace{0.2cm}
+Les boxplots du traitement 2 et du traitement 3 sont d'ailleurs similaires, quelque soit le réplicat. On peut donc faire l'hypothèse que ces deux traitements donnent des résultats similaires.
 Le traitement 1 est quant à lui beaucoup plus réduit et centré en 0. Ce traitement semble donc ne pas avoir d'effet sur les gènes. Les boxplots du traitement 1 sont symétriques mais possèdent également beaucoup d'outliers.
 
 ```{python include=FALSE}
@@ -144,15 +142,15 @@ fig=px.box(datapy)
 fig.show()
 ```
 
-\newpage
 
-```{r, echo = F, fig.cap="\\label{fig:corrplots}Graphique des corrélations des 36 variables", fig.height=5}
+
+```{r, echo = F, fig.cap="\\label{fig:corrplots}Graphique des corrélations des 36 variables", fig.height=4}
 corrplot(cor(data), method="ellipse")
 ```
 
+\newpage
 La figure \ref{fig:corrplots} des corrélations nous confirme bien l'hypothèse précédente, les traitements 2 et 3 sont fortement corrélés alors que ces traitements semblent totalement décorellés du traitements 1. \newline On peut également noter le fait que, pour un traitement donné, le réplicat 1 et le réplicat 2 sont fortement correlés entre eux, ce qui est cohérent puisque ce sont des réplicats biologiques. On pourra donc par la suite faire notre étude uniquement sur un seul réplicat (réplicat 2) sans perdre trop d'informations.
 
-\newpage
 
 ```{python include=FALSE, echo = F}
 plt.figure(figsize = (40,40))
@@ -167,11 +165,11 @@ BP[1,] = apply(data>1, 2, sum)
 BP[2,] = apply(data<=1&data>=(-1), 2, sum)
 BP[3,] = apply(data<(-1), 2, sum)
 BP = BP/nrow(data)
-barplot(BP, main="Fréquences", col=c("blue", "grey", "red"), names.arg=c(attributes(data)$names))
+barplot(BP, main="", ylab="Fréquences", col=c("blue", "grey", "red"), names.arg=c(attributes(data)$names))
 legend(0,0.6, legend=c("sur-exprimé", "non-exprimé", "sous-exprimé"), title="Type de gène", box.col="grey", fill=c("blue", "grey", "red"), cex=0.65)
 ```
 
-La graphique \ref{fig:expressiongenes} représente la fréquence des gènes "sous-exprimés", "non-exprimés" et "sur-exprimés" pour chaque traitement à toute heure sur les deux réplicats. \newline Il appuie notre hypothèse que les traitements 2 et 3 sont similaires et que le traitement 1 n'a pas beaucoup d'effet.
+La graphique \ref{fig:expressiongenes} représente la fréquence des gènes "sous-exprimés", "non-exprimés" et "sur-exprimés" pour chaque traitement à toute heure sur les deux réplicats. \newline Il appuie notre hypothèse que les traitements 2 et 3 sont similaires et que le traitement 1 n'a pas beaucoup d'effet. \newline Avec l'évolution du temps, les traitements T2 et T3 ont tendance à regrouper les données en deux classes : sur-exprimé et sous-exprimé. Ces classes ont l'air d'avoir le même nombre d'individu.
 
 ```{python include=FALSE, echo = F}
 d1 = datapy[datapy > 1].count()
@@ -185,12 +183,12 @@ somme = pd.DataFrame({'d1':d1,'d2':d2,'d3':d3})
 fig = px.bar(somme)
 fig.show()
 ```
-
+\vspace{3em}
 ```{r, echo = F, fig.cap="\\label{fig:freqG3H6}Fréquence de la valeur des gènes du traitement 3 à l'heure 6", fig.height=2}
-hist(data[,18])
+hist(data[,18], main="", xlab = "y")
 ```
 
-On remarque qu'à la dernière heure (6h) du traitement 3, tous les gènes sont soit très sur-exprimé (valeurs $\geq 2$ ), soit très sous-exprimé (valeurs $\leq 2$). Les gènes du jeu de données ont donc été choisis en fonction de T3_6H.
+Sur la figure \ref{fig:freqG3H6}, on remarque qu'à la dernière heure (6h) du traitement 3, tous les gènes sont soit très sur-exprimé (valeurs $\geq 2$ ), soit très sous-exprimé (valeurs $\leq 2$). Les gènes du jeu de données ont donc été choisis en fonction de T3_6H.
 
 ```{python include=FALSE}
 fig = px.histogram(datapy["T3_6h_R1"])
@@ -204,19 +202,17 @@ fig.show()
 ### Analyse en composante principale sur les individus
 
 ```{r include=FALSE, echo = F}
-data_centree_reduite = scale(data)
-data = as.data.frame(data_centree_reduite)
 res.pca = PCA(data, ncp=15, graph=F)
 summary(res.pca)
 ```
 
-```{r, echo = F,fig.cap="\\label{fig:variancepercentage}Variance expliquée cumulée (en %) des différentes composantes principales"}
+```{r, echo = F,fig.cap="\\label{fig:variancepercentage}Variance expliquée cumulée (en %) des différentes composantes principales", fig.height=3}
 barplot(cumsum(res.pca$eig[, "percentage of variance"]))
-abline(h=95, col="blue")
-abline(h=99, col="red")
+abline(h=90, col="blue")
+abline(h=95, col="red")
 ```
 
-D'après le graphique \ref{fig:variancepercentage}, on note que : \newline - Pour avoir 95% de l'information, on peut réduire nos données à 10 dimensions. \newline - Pour avoir 99% de l'information il suffit de se placer en dimension 18.
+D'après le graphique \ref{fig:variancepercentage}, on note que : \newline - Pour avoir 90% de l'information, on peut réduire nos données à 7 dimensions. On utilisera ces 7 composantes pour la partie clustering. \newline - Pour avoir 95% de l'information il suffit de se placer en dimension 10.
 
 ```{r include=FALSE}
 cumsum(res.pca$eig[, "percentage of variance"])
@@ -306,7 +302,7 @@ res.pca.transpose$eig
 summary(res.pca.transpose)
 ```
 
-```{python figure = F}
+```{python, fig=F, echo = F}
 data_transpose = datapy.T
 data_transpose_scale = StandardScaler().fit_transform(data_transpose)
 pca_transpose = PCA()
@@ -334,10 +330,10 @@ plt.grid()
 plt.title('sum of percentage of variance')
 ```
 
-```{r, echo = F, fig.cap="\\label{fig:variancepercentage2}Variance expliquée cumulée (en %) des différentes composantes principales"}
+```{r, echo = F, fig.cap="\\label{fig:variancepercentage2}Variance expliquée cumulée (en %) des différentes composantes principales", fig.height=3}
 barplot(cumsum(res.pca.transpose$eig[, "percentage of variance"]))
-abline(h=95, col="blue")
-abline(h=99, col="red")
+abline(h=90, col="blue")
+abline(h=95, col="red")
 ```
 
 ```{python include = F}
@@ -347,7 +343,7 @@ plt.axhline(y = 17, linewidth = .5, color = "dimgray", linestyle = "--") # ligne
 plt.show()
 ```
 
-D'après le graphique \ref{fig:variancepercentage2}, on note que : \newline Pour avoir 95% de l'information, on peut réduire nos données à 13 dimensions. \newline Pour avoir 99% de l'information il suffit de se placer en dimension 21.
+D'après le graphique \ref{fig:variancepercentage2}, on note que : \newline Pour avoir 90% de l'information, on peut réduire nos données à 3 dimensions. On utilisera ces composantes dans la partie clustering. \newline Pour avoir 95% de l'information il suffit de se placer en dimension 7.
 
 \vspace{2em}
 
@@ -355,7 +351,7 @@ D'après le graphique \ref{fig:variancepercentage2}, on note que : \newline Pour
 cumsum(res.pca.transpose$eig[, "percentage of variance"])
 ```
 
-```{r, echo = F, fig.cap="\\label{fig:pcatranspose2components}Visualitaion de l'ACP sur les deux premières composantes principales, pour les individus (à gauche) et pour les variables (à droite)"}
+```{r, echo = F, fig.cap="\\label{fig:pcatranspose2components}Visualitaion de l'ACP sur les deux premières composantes principales, pour les individus (à gauche) et pour les variables (à droite)", fig.height=3}
 g1 = fviz_pca_var(res.pca.transpose, col.var=data$T3_6h_R2, label="none") + scale_color_gradient2(low="blue", mid="black", high="red", midpoint=0)
 g2 = fviz_pca_ind(res.pca.transpose, axes=c(1, 2), autoLab="yes", col.ind=col_trait) + scale_color_gradient2(low="blue", mid="black", high="red", midpoint=2)
 grid.arrange(g2,g1,ncol=2)
@@ -465,7 +461,7 @@ g2 = ggplot(df,aes(x=K,y=Silhouette))+ xlab("Nombre de classes")+
 grid.arrange(g1, g2, ncol=2)
 ```
 
-On voit sur la figure \ref{fig:intraclasse}, pour l'inertie intraclasse, qu'il y a un coude pour K = 3. On retient donc 3 classes par ce criètre. Le critère silhouette montre un pic à K = 2, donc on retient 2 classes avec ce critère.
+On voit sur la figure \ref{fig:intraclasse}, pour l'inertie intraclasse, qu'il y a un coude pour K = 3 ou K = 6. On retient donc 3 classes par ce criètre. Le critère silhouette montre un pic à K = 2, donc on retient 2 classes avec ce critère.
 \vspace{1em}
 On a représenté sur la figure \ref{fig:kmeans2} les résultats de kmeans à trois classes (gauche) et à deux classes (droite) sur les 2 premières composantes principales de l'ACP.
 
@@ -533,7 +529,7 @@ fig.show()
 pd.crosstab(kmeans.labels_,"freq")
 ```
 
-```{r, echo = F, fig.cap="\\label{fig:silhouette}Graphique des silhouettes scores pour nos 3 clusters", fig.height=3}
+```{r, echo = F, fig.cap="\\label{fig:silhouette}Graphique des silhouettes scores pour nos 3 clusters", fig.height=2.5}
 aux<-silhouette(km$cluster, daisy(coord))
 aux2 = data.frame(aux)
 aux2c1 = aux2$sil_width[aux2$cluster==1]
@@ -541,7 +537,8 @@ aux2c2 = aux2$sil_width[aux2$cluster==2]
 aux2c3 = aux2$sil_width[aux2$cluster==3]
 aux2 <- tableGrob(data.frame(c1=round(sum(aux2c1) / length(aux2c1),2), c2=round(sum(aux2c2) / length(aux2c2),2), c3=round(sum(aux2c3) / length(aux2c3),2)))
 g1 = fviz_silhouette(aux, print.summary = F)
-grid.arrange(aux2, g1, ncol=2, widths=c(1, 2.4))
+#grid.arrange(aux2, g1, ncol=2, widths=c(1, 2.4))
+g1
 ```
 
 ```{python, echo = F, include = F}
@@ -571,7 +568,7 @@ ggplot(df,aes(x=K,y=Silhouette))+
   geom_line()+theme(legend.position = "bottom")
 ```
 
-On obtient le même résultat: 3 classes, et ils sont identiques qu'avec k-means.
+On obtient le même résultat: 2 classes, et ils sont identiques qu'avec k-means.
 
 ```{r, echo = F, fig.height=3}
 resPAM <- pam(coord, 2, metric = "euclidean")
@@ -582,15 +579,20 @@ table(km2$cluster,resPAM$clustering)
 
 Effectuons maintenant une classification hiérarchique avec la mesure d'agregation de Ward.
 
-```{r, echo =F, fig.height=3}
+```{r, echo =F}
 d = dist(coord)
 hclustsingle<-hclust(d, method = "single") # la distance euclidienne entre les points
 hclustcomplete<-hclust(d, method = "complete")
 hclustaverage<-hclust(d, method = "average")
 hward<-hclust(d,method="ward.D2")
 ```
+```{r, echo=F, fig.cap="\\label{fig:dendogram}Dendogramme de nos données avec classification hiérarchique avec la mesure d'agrégation de Ward", fig.height=2}
+Kmax <- 20
+df <- data.frame(K=1:Kmax, height=sort(hward$height, decreasing = T)[1:Kmax])
+ggplot(df, aes(x=K, y=height)) + geom_line() + geom_point()
+```
 
-```{python, echo = F, fig.cap="\\label{fig:dendogram}Dendogramme de nos données avec classification hiérarchique avec la mesure d'agrégation de Ward", fig.height=2}
+```{python, include = F}
 hward=linkage(coord,method='ward')
 dendrogram(hward,no_labels=True,color_threshold=0);  
 plt.show()
@@ -600,7 +602,7 @@ D'après la figure \ref{fig:dendogram}, on voit qu'il y a un saut en k = 3 ou 6 
 
 On a également essayé dans le Rmd de déterminer le nombre de classes à retenir avec l'indice de Calinski_Harabasz mais cela n'a pas marché. On voit que plus k est grand, plus l'indice Calinski-Harabasz augmente, il n'y a pas de pic sur la courbe, donc on peut pas déterminer une classification avec le critère Calinski-Harabasz.
 
-```{r, echo = F,  fig.cap="\\label{fig:calinski}Indice de Calinski-Harabasz en fonction du nombre de classe", fig.height=3}
+```{r, include = F,  fig.cap="\\label{fig:calinski}Indice de Calinski-Harabasz en fonction du nombre de classe", fig.height=3}
 
 CH <- NULL
 Kmax <- 20
@@ -611,10 +613,8 @@ daux <- data.frame(NbClust = 2:Kmax, CH = CH)
 ggplot(daux, aes(x = NbClust, y = CH)) + geom_line() + geom_point()
 ```
 
-On détermine le nombre de classes à retenir avec l'indice de Calinski_Harabasz figure \ref{fig:calinski}. Il y a un pic pour K = 3, on retient donc 3 classes.
 
-```{python, echo = F,  fig.cap="\\label{fig:calinski2}Indice de Calinski-Harabasz en fonction du nombre de classe", fig.height=3}
-
+```{python, include = F,  fig.cap="\\label{fig:calinski2}Indice de Calinski-Harabasz en fonction du nombre de classe", fig.height=3}
 model = AgglomerativeClustering()
 visualizer = KElbowVisualizer(model, k=(2,10), metric="calinski_harabasz",timings=False);
 visualizer.fit(coord)
@@ -657,7 +657,7 @@ fig.show()
 
 \newpage
 
-#### Modèle de mélange
+#### Modèle de mélange  \newline
 
 BIC : figure \ref{fig:bic}
 
@@ -706,14 +706,19 @@ probamax=[np.max(probapost[x,:]) for x in range(len(coord))]
 pd.crosstab(labels,"freq")
 ```
 
-Si on retient 3 classes: CAH, modèle de mélange BIC et ICL donnent le même résultat de classification selon ARI = 1:
+Si on retient 3 classes: CAH, modèle de mélange BIC et ICL donnent le même résultat de classification. Les trois combinaisons donnent un ARI = 1 (voir Rmd).
 
-```{r, echo = F, fig.height=3}
+```{r, include = F, fig.height=3}
 resBIC <- Mclust(coord, G = 3, modelNames = "EEV")
 resICL <- Mclust(coord, G = 3, modelNames = "EEV")
 
 adjustedRandIndex(resBIC$classification,resICL$classification)
 adjustedRandIndex(resBIC$classification,ClassK3)
+adjustedRandIndex(resICL$classification,ClassK3)
+```
+
+```{r,include = F, fig.cap="\\label{fig:pca2} Visualisation des 3 clusters sur le plan de l'ACP", fig.height=3}
+fviz_pca_ind(res.pca.transpose, axes = c(1, 2), geom = c("point", "text"), habillage = as.factor(resICL$classification))
 ```
 
 On visualise les 3 clusters en boxplot des probabilité d'appartenance et dans le plan de l'ACP:
@@ -724,12 +729,7 @@ Aux <- data.frame(label = paste("Cl", resICL$classification, sep = ""), proba = 
 ggplot(Aux, aes(x = label, y = proba)) + geom_boxplot()
 ```
 
-Tous les individus ont bien été classé dans chacun des classes car les boxplots sont aplati à 1.
-
-```{r,echo = F, fig.cap="\\label{fig:pca2} Visualisation des 3 clusters sur le plan de l'ACP", fig.height=3}
-fviz_cluster(resICL, data = Data, ellipse.type = "norm", geom = "point") +
-    ggtitle("") + theme(legend.position = "none")
-```
+Tous les individus ont bien été classé dans chacune des classes car toutes les probas sont très proches de 1.
 
 On compare les deux classifications: k = 2 avec kmeans et k=3 avec CAH Ward:
 
@@ -741,11 +741,12 @@ table(clust1,clust2)
 chordDiagram(table(clust1,clust2))
 ```
 
-On voit que le cluster 1 de k-means est égale aux cluster 2 et 3 de CAH, qui représente 2h et 3h du traitement T2/T3 du réplicat R1/R2. Les gènes du traitemetns T2/T3 dans les heures aux milieux(2h, 3h) ont donc des comportements différents que l'heure débutante(1h) et heures finales(5h,6h), ce qui correspond à l'analyse précédante.
+On voit sur la figure \ref{fig:chord} que le cluster 1 de k-means est égale aux cluster 2 et 3 de CAH, qui représente 2h et 3h du traitement T2/T3 du réplicat R1/R2. Les gènes du traitemetns T2/T3 dans les heures aux milieux(2h, 3h) ont donc des comportements différents que l'heure débutante(1h) et heures finales(5h,6h), ce qui correspond à l'analyse précédante.
 
+\newpage
 ## Obtention d'une classification des gènes ayant des profils d'expression similaires (co-exprimés) dans les différentes conditions
 
-On travaille avec les données non transposé pour la classification des gènes.
+Nous allons utiliser dans cette partie, différentes méthodes de clustering pour obtenir une classification des gènes ayant des profils d'expression similaires. Pour cela nous utilisons les 7 premières coordonnées de l'ACP réalisée sur les données (non transposées).
 
 ```{r, echo = F, include = F, fig.height=3}
 res.pca = PCA(data, ncp=15, scale.unit = TRUE, graph=F)
@@ -764,11 +765,11 @@ acp = pca.fit_transform(data)
 coord2 = pd.DataFrame(acp[:,0:7],columns = ['Dim 1', 'Dim 2', 'Dim 3', 'Dim 4', 'Dim 5', 'Dim 6', 'Dim 7'])
 ```
 
-### k-means
+### K-means
 
-Implementons l'algorithme K-means. \newline Commençons par déterminer le nombre de classe optimal. Nous avons implémenté sur la figure \ref{fig:gapstat} le gap statistic en fonction du nombre de classe. On trouve un pic pour K = 2. On choisi donc 2 classes. La méthode silhouette et la méthode des coudes (inertie intraclasse) ont également été implémenté sur le Rmd et nous donnent le même résultat.
+Implementons l'algorithme K-means. \newline Commençons par déterminer le nombre de classe optimal. Nous avons implémenté sur la figure \ref{fig:gapstat} le gap statistic en fonction du nombre de classe. On trouve un pic pour K = 2. On choisi donc 2 classes. La méthode silhouette et la méthode de l'inertie intraclasse ont également été implémentées sur le Rmd et nous donnent le même résultat.
 
-```{r,echo = F, fig.cap="\\label{fig:gapstat}Gap statistique en fonction du nombre de cluster", fig.height=3}
+```{r,echo = F, fig.cap="\\label{fig:gapstat}Gap statistique en fonction du nombre de cluster", fig.height=2.5}
 fviz_nbclust(coord2, FUNcluster = kmeans, method = "gap_stat")
 ```
 
@@ -830,7 +831,7 @@ fig.show()
 
 ```{r, echo = F, fig.cap="\\label{fig:acp5}Classification KMeans obtenue sur les gènes sur les axes de l'ACP", fig.height=3}
 reskmeans = kmeans(coord2,2)
-fviz_cluster(reskmeans,data=coord2,ellipse.type="norm",labelsize=8,geom=c("point"))+ggtitle("")
+#fviz_cluster(reskmeans,data=coord2,ellipse.type="norm",labelsize=8,geom=c("point"))+ggtitle("")
 fviz_pca_ind(res.pca, axes = c(1, 2), geom = c("point"), habillage = as.factor(reskmeans$cluster))
 ```
 
@@ -857,22 +858,22 @@ pd.crosstab(kmeans.labels_,"freq")
 
 Effectuons maintenant une classification hiérarchique des gènes avec la mesure d'agregation de Ward.
 
-```{python, echo = F, fig.cap="\\label{fig:dendogram3}Dendogramme des gènes avec classification hiérarchique avec la mesure d'agrégation de Ward", fig.height=2}
+```{python, include = F, fig.cap="\\label{fig:dendogram3}Dendogramme des gènes avec classification hiérarchique avec la mesure d'agrégation de Ward", fig.height=2}
 hward=linkage(coord2,method='ward')
 dendrogram(hward,no_labels=True,color_threshold=0);  
 plt.show()
 ```
 
-Afin de déterminer le nombre de classe optimal pour la classification hiérarchique, on trace la hauteur du dendogramme (fig \ref{fig:{dendogram3}}) en fonction du nombre de classe K.
+Afin de déterminer le nombre de classe optimal pour la classification hiérarchique, on trace la hauteur du dendogramme (fig \ref{fig:height3}) en fonction du nombre de classe K.
+Cette figure nous donne 2 ou 3 classes. On retrouve le même résultat avec l'indice de Calinski-Harabasz et l'indice Silhouette implémentés sur le Rmd.
 
-```{r,echo = F, fig.cap="\\label{fig:height3}Hauteur du dendogramme en fonction de K", fig.height=3}
+```{r,echo = F, fig.cap="\\label{fig:height3}Hauteur du dendogramme en fonction de K", fig.height=2.5}
 Kmax <- 20
 resward <- hclust(dist(coord2, method = "euclidean"), method = "ward.D2")
 df <- data.frame(K = 1:Kmax, height = sort(resward$height, decreasing = T)[1:Kmax])
 ggplot(df, aes(x = K, y = height)) + geom_line() + geom_point()
 ```
 
-La figure \\ref{ref:{height3}) nous donne 2 ou 3 classes. On retrouve le même résultat avec l'indice de Calinski-Harabasz et l'indice Silhouette implémenté sur le Rmd.
 
 ```{python, echo = F, include = F}
 # On détermine le nombre de classe avec indice de Calinski-Harabasz
@@ -886,9 +887,9 @@ visualizer.fit(coord2);
 visualizer.show()
 ```
 
-Visualisation avec 2 classes:
 
-```{r,echo = F,  fig.height=3}
+```{r,include = F,  fig.height=3}
+# Visualisation avec 2 classes:
 ClassK2 = cutree(resward,k=2)
 df<-data.frame(coord2,Class=as.factor(ClassK2))
 df<-melt(df,id="Class")
@@ -911,16 +912,17 @@ fig=px.scatter(pca_df,x="Dim1", y="Dim2",color="CAH")
 fig.show()
 ```
 
+
 ### Modèle de mélange
 
-Modèle mélange avec BIC: ??
+Le modèle de mélange avec BIC ne fonctionne pas : il a tendance à prendre le plus grand nombre de classe. (Voir Rmd)
 
-```{r,echo = F,  fig.height=3}
+```{r,include = F,  fig.height=3}
 resBICdiag <- Mclust(coord2, G = 2:10)
 fviz_mclust(resBICdiag, what = "BIC")
 ```
 
-Modèle mélange avec ICL: ??
+Le modèle mélange avec ICL retient 6 classes avec la forme VVV.
 
 ```{r, echo = F, fig.height=3}
 resICL <- mclustICL(coord2, G = 2:10)
@@ -949,14 +951,14 @@ fig = px.line(critdf, x='K', y='value', color='variable')
 fig.show()
 ```
 
-```{r, echo = F, fig.height=3}
+```{r, echo = F, fig.height=2}
 modICL <- Mclust(coord2, G = 6, modelNames = "VVV")
 Aux <- data.frame(label = paste("Cl", modICL$classification, sep = ""), proba = apply(modICL$z,
     1, max))
 ggplot(Aux, aes(x = label, y = proba)) + geom_boxplot()
 ```
 
-La classification n'a pas été bien faite, il y a beaucoup de outliers avec probabilité d'appartenance jusqu'à 50%.
+La classification n'a pas été bien faite, il y a beaucoup d'outliers avec une probabilité d'appartenance descendant jusqu'à 50%.
 
 ```{python, echo = F, include = F}
 # selon les critères BIC et ICL, on retient 6 classes
@@ -975,7 +977,7 @@ fig.show()
 
 ```
 
-```{r, echo = F, fig.height=3}
+```{r, include = F, fig.height=3}
 df <- data.frame(coord2, Class = as.factor(modICL$classification))
 df <- melt(df, id = "Class")
 ggplot(df, aes(x = variable, y = value)) + geom_violin(aes(fill = Class))
@@ -994,7 +996,7 @@ fig = px.scatter(df,x="X", y="Y", color="labels", symbol="labels")
 fig.show()
 ```
 
-Transformation en data qualitative avec modalités -1, 0 et 1:
+Transformons les données en données qualitative avec les modalités -1, 0 et 1:
 
 ```{r, echo = F, fig.height=3}
 data = read.delim("Data_Etudiants_2023.txt",header=TRUE, sep=";")
