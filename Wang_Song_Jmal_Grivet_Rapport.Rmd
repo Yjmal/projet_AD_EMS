@@ -22,7 +22,7 @@ opts_knit$set(width=75)
 
 # Introduction
 
-On observe pour G = 1615 gènes d'une plante modèle les valeurs suivantes : $$Y_{gtsr} = log_2 (X_{gtsr} + 1) - log_2(X_{gt_0} + 1)$$ avec \newline • $X_{gtsr}$ la mesure d'expression du gène g $\in$ {G1, . . . , G1615} pour le traitement t $\in$ {T1, T2, T3} pour le réplicat r $\in$ {R1, R2} et au temps s $\in$ {1h, 2h, 3h, 4h, 5h, 6h} \newline • $X_{gt_0}$ l'expression du gène g pour un traitement de référence t_0
+On observe pour G = 1615 gènes d’une plante modèle les valeurs suivantes : $$Y_{gtsr} = log_2 (X_{gtsr} + 1) - log_2(X_{gt_0} + 1)$$ avec \newline • $X_{gtsr}$ la mesure d'expression du gène g $\in$ {G1, . . . , G1615} pour le traitement t $\in$ {T1, T2, T3} pour le réplicat r $\in$ {R1, R2} et au temps s $\in$ {1h, 2h, 3h, 4h, 5h, 6h} \newline • $X_{gt_0}$ l'expression du gène g pour un traitement de référence t_0
 
 \vspace{1em}
 
@@ -38,7 +38,7 @@ Nous allons dans cette partie effectuer une analyse des statistiques descriptive
 
 ## Statistiques descriptives et préparation du jeu de données
 
-```{r echo=FALSE}
+```{r include=FALSE}
 rm(list=ls())
 library(reticulate)
 library(ggplot2)
@@ -149,7 +149,7 @@ corrplot(cor(data), method="ellipse")
 ```
 
 \newpage
-La figure \ref{fig:corrplots} des corrélations nous confirme bien l'hypothèse précédente, les traitements 2 et 3 sont fortement corrélés alors que ces traitements semblent totalement décorellés du traitements 1. \newline On peut également noter le fait que, pour un traitement donné, le réplicat 1 et le réplicat 2 sont fortement correlés entre eux, ce qui est cohérent puisque ce sont des réplicats biologiques. On pourra donc par la suite faire notre étude uniquement sur un seul réplicat (réplicat 2) sans perdre trop d'informations.
+La figure \ref{fig:corrplots} des corrélations nous confirme bien l'hypothèse précédente, les traitements 2 et 3 sont fortement corrélés alors que ces traitements semblent totalement décorrélés du traitements 1. \newline On peut également noter le fait que, pour un traitement donné, le réplicat 1 et le réplicat 2 sont fortement corrélés entre eux, ce qui est cohérent puisque ce sont des réplicats biologiques. On pourra donc par la suite faire notre étude uniquement sur un seul réplicat (réplicat 2) sans perdre trop d'informations.
 
 
 ```{python include=FALSE, echo = F}
@@ -439,7 +439,7 @@ reskmeanscl<-matrix(0,nrow=nrow(coord),ncol=Kmax-1)
 Iintra<-NULL
 for (k in 2:Kmax){
   resaux<-kmeans(coord, k, nstart = 10)
-  # l'inertie intra-class augmente à cause de la instabilité de k-means, solution: refaire plusieurs fois de calcule avec option nstart
+  # l'inertie intraclasse augmente à cause de la instabilité de k-means, solution: refaire plusieurs fois de calcule avec option nstart
   reskmeanscl[,k-1]<-resaux$cluster
   Iintra<-c(Iintra,resaux$tot.withinss)
 }
@@ -461,9 +461,9 @@ g2 = ggplot(df,aes(x=K,y=Silhouette))+ xlab("Nombre de classes")+
 grid.arrange(g1, g2, ncol=2)
 ```
 
-On voit sur la figure \ref{fig:intraclasse}, pour l'inertie intraclasse, qu'il y a un coude pour K = 3 ou K = 6. On retient donc 3 classes par ce criètre. Le critère silhouette montre un pic à K = 2, donc on retient 2 classes avec ce critère.
+On voit sur la figure \ref{fig:intraclasse}, pour l'inertie intraclasse, qu'il y a un coude pour K = 3 ou K = 6. On retient donc 3 classes par ce critère. Le critère silhouette montre un pic à K = 2, donc on retient 2 classes avec ce critère.
 \vspace{1em}
-On a représenté sur la figure \ref{fig:kmeans2} les résultats de kmeans à trois classes (gauche) et à deux classes (droite) sur les 2 premières composantes principales de l'ACP.
+On a représenté sur la figure \ref{fig:kmeans2} les résultats de K-means à trois classes (gauche) et à deux classes (droite) sur les 2 premières composantes principales de l'ACP.
 
 ```{python, include = F, echo = F}
 InertieIntra = []
@@ -500,14 +500,14 @@ g2 = fviz_pca_ind(res.pca.transpose, habillage = as.factor(km2$cluster),axes = c
 grid.arrange(g1, g2, ncol=2)
 ```
 
-Pour un Kmeans à trois classes, on remarque que le cluster 1 regroupe les traitements T2 et T3 du réplicat R1/R2 à 1h et le traitement T1 du réplicat R1/R2 pour toutes les heures. Le cluster 2 regoupe les traitements T2 et T3 de 2h et 3h. Le cluster 3 regroupe les traitements T2 et T3 de 4h à 6h.
+Pour un K-means à trois classes, on remarque que le cluster 1 regroupe les traitements T2 et T3 du réplicat R1/R2 à 1h et le traitement T1 du réplicat R1/R2 pour toutes les heures. Le cluster 2 regoupe les traitements T2 et T3 de 2h et 3h. Le cluster 3 regroupe les traitements T2 et T3 de 4h à 6h.
 \newline A l'heure de début (1h), les traitements T2/T3 ont le même effet que T1 sur les gènes, on peut supposer que l'effet du traitement T2/T3 se déroule graduellement donc ne s'est pas encore manifesté à 1h.
 \vspace{1em} 
-Le Kmeans à deux classes, regroupe seulement les classes deux et trois du Kmeans à trois classes.
+Le K-means à deux classes, regroupe seulement les classes deux et trois du K-means à trois classes.
 
 \vspace{1em} 
 
-Effectuons maintenant un diagramme de silhouette afin de déterminer l'homogéité de nos 3 clusters. \newline On voit sur le diagramme de silhouette figure \ref{fig:silhouette} que les clusters 1 et 2 ont des scores de silhouette inférieurs au cluster 3. La cohésion des points du cluster 3 est donc plus grande. C'est-à-dire que le cluster 3 a moins d'outliers et est plus proches de son centre de gravité que les deux autres clusters. On peut cependant noter que le score de silhouette de chaque cluster est supérieure à 0.5, les partitions de chaque cluster sont globalement homogènes.
+Effectuons maintenant un diagramme de silhouette afin de déterminer l'homogénéité de nos 3 clusters. \newline On voit sur le diagramme de silhouette figure \ref{fig:silhouette} que les clusters 1 et 2 ont des scores de silhouette inférieurs au cluster 3. La cohésion des points du cluster 3 est donc plus grande. C'est-à-dire que le cluster 3 a moins d'outliers et est plus proches de son centre de gravité que les deux autres clusters. On peut cependant noter que le score de silhouette de chaque cluster est supérieure à 0.5, les partitions de chaque cluster sont globalement homogènes.
 
 ```{python, echo = F, include = F}
 # on retient 3 classes
@@ -577,7 +577,7 @@ table(km2$cluster,resPAM$clustering)
 
 ### Classification hiérarchique
 
-Effectuons maintenant une classification hiérarchique avec la mesure d'agregation de Ward.
+Effectuons maintenant une classification hiérarchique avec la mesure d’agrégation de Ward.
 
 ```{r, echo =F}
 d = dist(coord)
@@ -586,6 +586,7 @@ hclustcomplete<-hclust(d, method = "complete")
 hclustaverage<-hclust(d, method = "average")
 hward<-hclust(d,method="ward.D2")
 ```
+
 ```{r, echo=F, fig.cap="\\label{fig:dendogram}Dendogramme de nos données avec classification hiérarchique avec la mesure d'agrégation de Ward", fig.height=2}
 Kmax <- 20
 df <- data.frame(K=1:Kmax, height=sort(hward$height, decreasing = T)[1:Kmax])
@@ -600,7 +601,7 @@ plt.show()
 
 D'après la figure \ref{fig:dendogram}, on voit qu'il y a un saut en k = 3 ou 6 puis la courbe s'aplanit, on retient donc 3 ou 6 classes.
 
-On a également essayé dans le Rmd de déterminer le nombre de classes à retenir avec l'indice de Calinski_Harabasz mais cela n'a pas marché. On voit que plus k est grand, plus l'indice Calinski-Harabasz augmente, il n'y a pas de pic sur la courbe, donc on peut pas déterminer une classification avec le critère Calinski-Harabasz.
+On a également essayé dans le Rmd de déterminer le nombre de classes à retenir avec l'indice de Calinski-Harabasz mais cela n'a pas marché. On voit que plus k est grand, plus l'indice Calinski-Harabasz augmente, il n'y a pas de pic sur la courbe, donc on peut pas déterminer une classification avec le critère Calinski-Harabasz.
 
 ```{r, include = F,  fig.cap="\\label{fig:calinski}Indice de Calinski-Harabasz en fonction du nombre de classe", fig.height=3}
 
@@ -640,7 +641,7 @@ fig.show()
 
 
 ```{r, include = F, fig.cap="\\label{fig:ward2}Distribution des variables en 3 classes avec la mesure de Ward",fig.height=3}
-# On trace maintenant la distribution des variables en fonction de la classification en 3 classes avec la mésure d'agrégation Ward.
+# On trace maintenant la distribution des variables en fonction de la classification en 3 classes avec la mesure d'agrégation Ward.
 ClassK3 = cutree(hward,k=3)
 df<-data.frame(coord,Class=as.factor(ClassK3))
 df<-melt(df,id="Class")
@@ -666,9 +667,9 @@ resBICdiag <- Mclust(coord, G = 2:10)
 fviz_mclust(resBICdiag, what = "BIC")
 ```
 
-ICL : figure \ref{fig:icl3}
+ICL :
 
-```{r, echo=F,fig.cap="\\label{fig:icl3}Modèle de mélange ICL", fig.height=3}
+```{r, echo=F}
 resICL <- mclustICL(coord, G = 2:10)
 summary(resICL)
 ```
@@ -731,7 +732,7 @@ ggplot(Aux, aes(x = label, y = proba)) + geom_boxplot()
 
 Tous les individus ont bien été classé dans chacune des classes car toutes les probas sont très proches de 1.
 
-On compare les deux classifications: k = 2 avec kmeans et k=3 avec CAH Ward:
+On compare les deux classifications: k = 2 avec K-means et k=3 avec CAH Ward:
 
 ```{r, echo = F,fig.cap="\\label{fig:chord}Diagramme de Chord entre les clusters de Kmeans et les clusters de CAH Ward",fig.height=3}
 
@@ -741,7 +742,7 @@ table(clust1,clust2)
 chordDiagram(table(clust1,clust2))
 ```
 
-On voit sur la figure \ref{fig:chord} que le cluster 1 de k-means est égale aux cluster 2 et 3 de CAH, qui représente 2h et 3h du traitement T2/T3 du réplicat R1/R2. Les gènes du traitemetns T2/T3 dans les heures aux milieux(2h, 3h) ont donc des comportements différents que l'heure débutante(1h) et heures finales(5h,6h), ce qui correspond à l'analyse précédante.
+On voit sur la figure \ref{fig:chord} que le cluster 1 de k-means est égale aux cluster 2 et 3 de CAH, qui représente 2h et 3h du traitement T2/T3 du réplicat R1/R2. Les gènes du traitements T2/T3 dans les heures aux milieux(2h, 3h) ont donc des comportements différents que l'heure débutante(1h) et heures finales(5h,6h), ce qui correspond à l'analyse précédente.
 
 \newpage
 ## Obtention d'une classification des gènes ayant des profils d'expression similaires (co-exprimés) dans les différentes conditions
@@ -767,7 +768,7 @@ coord2 = pd.DataFrame(acp[:,0:7],columns = ['Dim 1', 'Dim 2', 'Dim 3', 'Dim 4', 
 
 ### K-means
 
-Implementons l'algorithme K-means. \newline Commençons par déterminer le nombre de classe optimal. Nous avons implémenté sur la figure \ref{fig:gapstat} le gap statistic en fonction du nombre de classe. On trouve un pic pour K = 2. On choisi donc 2 classes. La méthode silhouette et la méthode de l'inertie intraclasse ont également été implémentées sur le Rmd et nous donnent le même résultat.
+Implémentons l'algorithme K-means. \newline Commençons par déterminer le nombre de classe optimal. Nous avons implémenté sur la figure \ref{fig:gapstat} le gap statistique en fonction du nombre de classe. On trouve un pic pour K = 2. On choisi donc 2 classes. La méthode silhouette et la méthode de l'inertie intraclasse ont également été implémentées sur le Rmd et nous donnent le même résultat.
 
 ```{r,echo = F, fig.cap="\\label{fig:gapstat}Gap statistique en fonction du nombre de cluster", fig.height=2.5}
 fviz_nbclust(coord2, FUNcluster = kmeans, method = "gap_stat")
@@ -856,7 +857,7 @@ pd.crosstab(kmeans.labels_,"freq")
 
 ### Classification hiérarchique avec mesure de Ward
 
-Effectuons maintenant une classification hiérarchique des gènes avec la mesure d'agregation de Ward.
+Effectuons maintenant une classification hiérarchique des gènes avec la mesure d’agrégation de Ward.
 
 ```{python, include = F, fig.cap="\\label{fig:dendogram3}Dendogramme des gènes avec classification hiérarchique avec la mesure d'agrégation de Ward", fig.height=2}
 hward=linkage(coord2,method='ward')
@@ -864,7 +865,7 @@ dendrogram(hward,no_labels=True,color_threshold=0);
 plt.show()
 ```
 
-Afin de déterminer le nombre de classe optimal pour la classification hiérarchique, on trace la hauteur du dendogramme (fig \ref{fig:height3}) en fonction du nombre de classe K.
+Afin de déterminer le nombre de classe optimal pour la classification hiérarchique, on trace la hauteur du dendrogramme (fig \ref{fig:height3}) en fonction du nombre de classe K.
 Cette figure nous donne 2 ou 3 classes. On retrouve le même résultat avec l'indice de Calinski-Harabasz et l'indice Silhouette implémentés sur le Rmd.
 
 ```{r,echo = F, fig.cap="\\label{fig:height3}Hauteur du dendogramme en fonction de K", fig.height=2.5}
@@ -1016,7 +1017,7 @@ data_quali[(data > -1) & (data < 1)] = 0
 data_quali = pd.DataFrame(data = data_quali, columns = data.columns.values)
 ```
 
-D'après analyse descriptive précedante, on sait que T3_6h_R2 possède que des gènes sur-exprimé et sous-exprimé, donc en comparant avec T3_6h_R2, on en déduit que les deux cluters qu'on a obtenu sépare les profils d'expression non-similaires (sur et sous-exprimé), qui veut dire regroupe les profils co-exprimés:
+D'après analyse descriptive précédente, on sait que T3_6h_R2 possède que des gènes sur-exprimé et sous-exprimé, donc en comparant avec T3_6h_R2, on en déduit que les deux clusters qu'on a obtenu sépare les profils d'expression non-similaires (sur et sous-exprimé), qui veut dire regroupe les profils co-exprimés:
 
 ```{r, echo = F, fig.height=3}
 table(reskmeans$cluster,data_quali$T3_6h_R2)
@@ -1088,7 +1089,7 @@ plot(choix,scale = "Cp")
 
 On a réalisé notre sélection de variables avec tous les critères (BIC, adjr2, Cp) et avec les méthodes forward et backward. Nous avons eu les mêmes résultats.
 
-On garde toutes les variables mais on observe quand même une gradation. Le temps précédent (5h) est le plus influent suivi du temps de démarrage (1h, 2h). On peut faire l'hypothèse d'une périodicité de temps sur l'influence des traitements sur les gènes. Il faudrait tester cette sélection de variable sur plus d'heures afin valider ou non cette hypothèse.
+On garde toutes les variables mais on observe quand même une gradation. Le temps précédent (5h) est le plus influent suivi du temps de démarrage (1h, 2h). On peut faire l'hypothèse d'une périodicité de temps sur l'influence des traitements sur les gènes. Il faudrait tester cette sélection de variable sur plus d'heures afin de valider ou non cette hypothèse.
 
 ```{python, include = F}
 print('SSR:', results.ssr)
@@ -1144,7 +1145,7 @@ choix=regsubsets(T3_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "forward
 plot(choix,scale = "adjr2")
 ```
 
-D'après la figure \ref{fig:selection2} (et les autres figures qui ont été réalisé sur le R-markdown), on trouve que : \newline - On sélectionne les variables suivantes pour T1: 1h, 3h, 5h, 6h, pour T2: 1h, 3h, 5h, 6h et pour T3: 5h. Cela rejoint l'analyse descriptive précedente : les gènes qui ont eu le traitement T2 ou le traitemet T3 ont des comportements similaires. \newline - On retrouve, par ailleurs, les résultats de l'analyse de la figure \ref{fig:selection1} puisque les heures les plus influentes sont les heures les plus proches de 6h.
+D'après la figure \ref{fig:selection2} (et les autres figures qui ont été réalisé sur le Rmd), on trouve que : \newline - On sélectionne les variables suivantes pour T1: 1h, 3h, 5h, 6h, pour T2: 1h, 3h, 5h, 6h et pour T3: 5h. Cela rejoint l'analyse descriptive précedente : les gènes qui ont eu le traitement T2 ou le traitement T3 ont des comportements similaires. \newline - On retrouve, par ailleurs, les résultats de l'analyse de la figure \ref{fig:selection1} puisque les heures les plus influentes sont les heures les plus proches de 6h.
 
 \newpage
 
@@ -1165,7 +1166,7 @@ La p-valeur est égale 0.2798 et est supérieure à 0.05, on ne rejette don pas 
 
 ### Lasso
 
-```{r, echo = F, fig.height=3}
+```{r, include = F, fig.height=3}
 lambda_seq=seq(0,1,0.001)
 tildeX = as.matrix(R2[,-18])
 tildeY = data$T3_6h_R2
@@ -1177,14 +1178,15 @@ g1 = ggplot(df,aes(x=tau,y=theta,col=variable))+geom_line()+ylab("Estimator of t
 g1
 ```
 
-```{r, echo = F, fig.height=3}
+```{r, echo = F, fig.height=3, fig.cap="\\label{fig:lasso}Sélection de variable avec le critère lasso"}
 tildeX = as.matrix(R2[,-18])
 tildeY = data$T3_6h_R2
 fitlasso <- glmnet(tildeX, tildeY, alpha = 1, family=c("gaussian"), intercept=F)
 plot_glmnet(fitlasso,label = 8)
 ```
 
-On voit que les variables les plus affectantes sont: -T1: 1h, 3h, 5h -T2: 3h, 4h, 5h, 6h -T3: 5h \newpage
+On voit que les variables les plus affectantes sont : -T1: 1h, 5h, 6h -T2: 1h, 3h, 5h, 6h -T3: 5h \newline
+Ce modèle est très proche du sous-modèle que l'on vient de valider, il manque seulement T1_3h.
 
 ## Modèle linéaire généralisé
 
@@ -1209,7 +1211,7 @@ y = y.astype(int)
 y.value_counts()
 ```
 
-En prenant en compte toutes les variables, le modèle linéaire généralisé n'arrive pas à bien ajuster le modèle. On remarque que toutes les pvaleurs sont égales à 1. \newline Ceci est probablement dû au fait que les variables sont très liées les unes aux autres.
+En prenant en compte toutes les variables, le modèle linéaire généralisé n'arrive pas à bien ajuster le modèle. On remarque que toutes les p-valeurs sont égales à 1. \newline Ceci est probablement dû au fait que les variables sont très liées les unes aux autres.
 
 ```{r include=F, echo = F}
 step.backward <- step(glm.T36HR2, trace=F)
@@ -1223,9 +1225,10 @@ Cependant, d'après la table lorsqu'on fait une sélection de variable "backward
 stepAIC(glm.T36HR2, direction=c("forward"),p=2, trace=F) # AIC
 ```
 
-Peut importe les combinaisons de traitement qu'on prend en pour expliquer T3_6h_R2, on obtient la même erreur (des pvaleurs toutes égales à 1) sauf lorsqu'on prend seulement le traitement 1. \newline Dans ce cas, on obtient que T3_6h_R2 s'explique par T1_1h_R2, T1_2h_R2, T1_3h_R2, T1_4h_R2, T1_6h_R2 par une sélection de variable "backward".
+Peut importe les combinaisons de traitement qu'on prend en pour expliquer T3_6h_R2, on obtient la même erreur (des p-valeurs toutes égales à 1) sauf lorsqu'on prend seulement le traitement 1. \newline Dans ce cas, on obtient que T3_6h_R2 s'explique par T1_1h_R2, T1_2h_R2, T1_3h_R2, T1_4h_R2, T1_6h_R2 par une sélection de variable "backward". Autrement dit, seulement on enlève seulement l'heure 5 ce qui ne nous aide pas vraiment. \newline
+Toutes les sélections de variable et les combinaisons citée ici sont dans le Rmd.
 
-```{r, echo = F}
+```{r, include = F}
 T1 = data[grep("T1", names(data), value=TRUE)]
 T1R2 = T1[grep("R2", names(T1), value=TRUE)]
 T1R2_T3_6h_R2 = T1R2
@@ -1253,6 +1256,7 @@ step.backward <- step(glm.T1R2_T3_6h_R2, trace=F)
 summary(step.backward)
 ```
 
+\newpage
 # Etude de l'expression des gènes pour le traitement T1 à 6h
 
 Nous allons dans cette partie étudier l'expression des gènes pour le traitement T1 à 6h. Nous allons notamment repérer les temps influent l'expression de ces gènes ainsi que les variables prédictives qui permettent de discriminer les gènes sur-exprimés des gènes sous-exprimés, à 6h pour le traitement T1.
@@ -1288,7 +1292,7 @@ results_sous2 = regmulti_sous2.fit()
 ```
 
 
-```{r, echo = F, , fig.cap="\\label{fig:selection3}Selection de variable du traitement 1 selon le critère BIC et la méthode backward", fig.height=3.5}
+```{r, echo = F, , fig.cap="\\label{fig:selection3}Selection de variable du traitement 1 selon le critère BIC et la méthode backward", fig.height=3.4}
 choix=regsubsets(T1_6h_R2~., data = T1R2, nbest = 1, nvmax = 5, method = "backward")
 plot(choix,scale = "bic")
 ```
@@ -1327,7 +1331,7 @@ print(anovaResults2)
 ```
 
 
-p-valeur = 0.5687 \> 0.05, on ne rejette pas H0 au risque de 5%, on valide le sous-modèle.
+p-valeur = 0.5687 \> 0.05, on ne rejette pas H0 au risque de 5%, donc on valide le sous-modèle.
 
 ### Etude sur tous les traitements et tous les temps
 
@@ -1373,8 +1377,7 @@ choix=regsubsets(T1_6h_R2~., data = R2, nbest = 1, nvmax = 18, method = "forward
 plot(choix,scale = "adjr2")
 ```
 
-D'après la figure \ref{fig:selection4} (et les autres figures qui ont été réalisé sur le R-markdown), on trouve que : \newline - On sélectionne les variables suivantes pour T1: 1h, 2h, 3h, 4h, 5h, 6h, pour T2: 1h, 2h, 3h, 6h et pour T3: 1h, 5h, 6h.\
-\newline - On retrouve, par ailleurs, les résultats de l'analyse de la figure \ref{fig:selection3} puisque les heures les plus influentes sont les heures les plus proches de 6h.
+D'après la figure \ref{fig:selection4} (et les autres figures qui ont été réalisé sur le Rmd), on sélectionne les variables suivantes pour T1: 1h, 2h, 3h, 4h, 5h, 6h, pour T2: 1h, 2h, 3h, 6h et pour T3: 1h, 5h, 6h.
 
 \newpage
 
@@ -1394,7 +1397,7 @@ On voit que l'expression des gènes à 6h pour le traitement T1 est affecté par
 
 ### Lasso
 
-```{r, echo = F, fig.height=3}
+```{r, include = F, fig.height=3}
 lambda_seq=seq(0,1,0.001)
 x = model.matrix(T1_6h_R2~.,data=R2)
 y = data$T1_6h_R2
@@ -1403,12 +1406,21 @@ plot(fitlasso,label= TRUE)
 abline(v = 0.7)
 ```
 
-On voit que les variables les plus affectantes sont ??
+```{r, echo = F, fig.height=3, fig.cap="\\label{fig:lasso2}Sélection de variable avec le critère lasso"}
+lambda_seq=seq(0,1,0.001)
+x = model.matrix(T1_6h_R2~.,data=R2)
+y = data$T1_6h_R2
+fitlasso <- glmnet(x, y , alpha = 1, label = lambda_seq, family=c("gaussian"), intercept=F)
+plot_glmnet(fitlasso,label = 8)
+```
 
+On voit que les variables les plus affectantes sont : -T1: 2h, 3h, 4h, 5h -T2: 1h -T3: 1h, 5h, 6h \newline
+
+\newpage 
 ## Modèle linéaire généralisé
 
 On veut chercher les variables prédictives qui permettent de discriminer les gènes sur-exprimés (Y\>1), les gènes sous-exprimés (Y\<-1), et les gènes non-exprimés à 6h pour le traitement T1. \newline
-La sortie est binaire, nous allons donc chercher les variables prédictives par une régression logistique sur le réplicat 2 uniquement (puisque nous avions montré précedemment que le réplicat 1 était similaire en comportement au réplicat 2).
+La sortie n'est pas binaire, nous allons donc chercher les variables prédictives par une régression logistique multinomiale sur le réplicat 2.
 
 ```{r, echo = F}
 
@@ -1447,3 +1459,5 @@ summary(step.backward)
 ```
 
 En faisant une sélection de modèle en mode "backward" on peut exprimer T1_6h_R2 par : T1_3h_R2, T1_4h_R2, T1_5h_R2, T2_2h_R2, T2_5h_R2, T3_1h_R2, T3_5h_R2, T3_6h_R2
+
+
